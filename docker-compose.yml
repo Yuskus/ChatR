@@ -1,0 +1,47 @@
+services:
+  chatr:
+    image: ${DOCKER_REGISTRY-}chatr
+    container_name: chatr
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DOCKER_USER_APP: ${DOCKER_USER_APP}
+        DOCKER_UID: ${DOCKER_UID}
+        DOCKER_GID: ${DOCKER_GID}
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION}
+        DB_CONNECTION: ${DB_CONNECTION}
+    depends_on:
+      - chatr_db
+    networks:
+      - chatr-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNET_CONFIGURATION}
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+    restart: always
+    ports:
+      - "${HTTP_PORT}:8080"
+      - "${HTTPS_PORT}:8081"
+
+  chatr_db:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: chatr_db
+    environment:
+      POSTGRES_DB: '${DB_NAME}'
+      POSTGRES_USER: '${DB_USER}'
+      POSTGRES_PASSWORD: '${DB_PSWD}'
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - chatr_db:/var/lib/posgresql/data/
+    networks:
+      - chatr-network
+
+volumes:
+  chatr_db:
+  
+networks:
+  chatr-network:
+    driver: bridge
