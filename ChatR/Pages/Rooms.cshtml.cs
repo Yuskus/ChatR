@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ChatR.Pages
 {
-    public class PrivacyModel : PageModel
+    public class RoomsModel : PageModel
     {
         public void OnGet()
         {
