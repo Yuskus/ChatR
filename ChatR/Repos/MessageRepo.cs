@@ -16,13 +16,17 @@ public class MessageRepo
     public async Task<Message?> GetByIdAsync(int id)
     {
         return await _context.Messages
+            .Include(m => m.User)
+            .Include(m => m.Room)
             .FirstOrDefaultAsync(r => r.Id == id);
     }
 
-    public async Task Add(Message message)
+    public async Task<Message?> Add(Message message)
     {
         _context.Messages.Add(message);
         await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(message.Id);
     }
 
     public async Task Delete(int id)

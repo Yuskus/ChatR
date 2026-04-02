@@ -1,0 +1,78 @@
+﻿@page
+@model ChatR.Pages.Users.ProfileModel
+@{
+    ViewData["Title"] = "Профиль";
+}
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h4>Ваш профиль</h4>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <form method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label asp-for="FirstName" class="form-label">Имя</label>
+            <input asp-for="FirstName"
+                   class="form-control"
+                   placeholder="Иван"
+                   required />
+            <span asp-validation-for="FirstName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="LastName" class="form-label">Фамилия</label>
+            <input asp-for="LastName"
+                   class="form-control"
+                   placeholder="Иванов"
+                   required />
+            <span asp-validation-for="LastName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Patronymic" class="form-label">Отчество (необязательно)</label>
+            <input asp-for="Patronymic"
+                   class="form-control"
+                   placeholder="Иванович" />
+            <span asp-validation-for="Patronymic" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label for="Password" class="form-label">Новый пароль (оставьте пустым, чтобы не менять)</label>
+            <input id="Password"
+                   name="Password"
+                   type="password"
+                   class="form-control"
+                   minlength="6"
+                   placeholder="••••••" />
+            <div class="form-text">Оставьте пустым, чтобы сохранить текущий пароль</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a asp-page="/Index" class="btn btn-secondary ms-2">Отмена</a>
+    </form>
+
+    <hr />
+
+    <form method="post" asp-page-handler="Delete" class="mt-3">
+        @Html.AntiForgeryToken()
+        <button type="submit"
+                class="btn btn-sm btn-outline-danger"
+                onclick="return confirm('Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить.')">
+            Удалить аккаунт
+        </button>
+    </form>
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

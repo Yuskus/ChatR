@@ -45,7 +45,7 @@ public class ApplicationDbContext : DbContext
 
             user
                 .Property(p => p.CreatedAt)
-                .HasDefaultValueSql("now")
+                .HasDefaultValueSql("now()")
                 .IsRequired();
             user
                 .Property(p => p.Email)
@@ -74,7 +74,7 @@ public class ApplicationDbContext : DbContext
 
             room
                 .Property(p => p.CreatedAt)
-                .HasDefaultValueSql("now")
+                .HasDefaultValueSql("now()")
                 .IsRequired();
             room
                 .Property(x => x.IsClosed)
@@ -96,7 +96,7 @@ public class ApplicationDbContext : DbContext
 
             usersInRoom
                 .Property(p => p.CreatedAt)
-                .HasDefaultValueSql("now")
+                .HasDefaultValueSql("now()")
                 .IsRequired();
             usersInRoom
                 .Property(p => p.RoomRole)

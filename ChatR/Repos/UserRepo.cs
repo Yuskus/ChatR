@@ -22,19 +22,35 @@ public class UserRepo
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == email.ToLower());
+            .FirstOrDefaultAsync(u => u.Email == email.Trim().ToLower());
     }
 
     public async Task<bool> ExistsByEmailAsync(string email)
     {
         return await _context.Users
-            .AnyAsync(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+            .AnyAsync(u => u.Email == email.Trim().ToLower());
     }
 
     public async Task AddAsync(User user)
     {
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<User?> Update(int id, string? passwordHash, string firstName, string lastName, string? patronymic)
+    {
+        var user = await GetByIdAsync(id);
+        if (user == null) return null;
+
+        if (passwordHash != null)
+            user.Password = passwordHash;
+
+        user.FirstName = firstName;
+        user.LastName = lastName;
+        user.Patronymic = patronymic;
+        await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(id);
     }
 
     public async Task DeleteAsync(int id)

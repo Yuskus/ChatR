@@ -20,7 +20,7 @@ public class RoomService
         return await _roomRepo.GetByIdAsync(id);
     }
 
-    public async Task AddAsync(string name)
+    public async Task<Room?> AddAsync(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Имя комнаты обязательно", nameof(name));
@@ -37,7 +37,7 @@ public class RoomService
             throw new ArgumentException($"Комната с именем '{name}' уже существует", nameof(name));
 
 
-        await _roomRepo.AddAsync(new Room
+        return await _roomRepo.AddAsync(new Room
         {
             Name = name
         });

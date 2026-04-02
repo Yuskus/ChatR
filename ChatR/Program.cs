@@ -1,4 +1,4 @@
-using ChatR.Data;
+﻿using ChatR.Data;
 using ChatR.Hubs;
 using ChatR.Models.Constatns;
 using ChatR.Models.Settings;
@@ -25,15 +25,19 @@ builder.Services.AddCors(options =>
     });
 });
 
-// auth
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+});
 
+// auth
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var jwtSettings = builder.Configuration.GetSection(Env.JWT_SETTINGS_SECTION).Get<JwtSettings>();
-        var key = Encoding.UTF8.GetBytes(jwtSettings!.Secret);
+        var jwtSettings = new JwtSettings();
+
+        var key = Encoding.UTF8.GetBytes(jwtSettings.Secret!);
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -44,6 +48,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtSettings.Issuer,
             ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Cookies["auth_token"];
+                if (!string.IsNullOrEmpty(token))
+                {
+                    context.Token = token;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 

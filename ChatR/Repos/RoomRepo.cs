@@ -22,13 +22,15 @@ public class RoomRepo
     public async Task<bool> ExistsByNameAsync(string name)
     {
         return await _context.Rooms
-            .AnyAsync(r => r.Name == name.ToLower());
+            .AnyAsync(r => r.Name.ToLower() == name.Trim().ToLower());
     }
 
-    public async Task AddAsync(Room room)
+    public async Task<Room?> AddAsync(Room room)
     {
         _context.Rooms.Add(room);
         await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(room.Id);
     }
 
     public async Task DeleteAsync(int id)

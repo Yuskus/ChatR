@@ -1,0 +1,92 @@
+﻿@page
+@model ChatR.Pages.Auth.RegisterModel
+@{
+    ViewData["Title"] = "Регистрация";
+}
+
+<div class="container mt-5" style="max-width: 400px;">
+    <h3 class="text-center mb-4">Регистрация</h3>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <form method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row mb-3">
+            <div class="col">
+                <label for="firstName" class="form-label">Имя</label>
+                <input type="text"
+                       class="form-control"
+                       id="firstName"
+                       asp-for="FirstName"
+                       placeholder="Иван"
+                       required />
+            </div>
+            <div class="col">
+                <label for="lastName" class="form-label">Фамилия</label>
+                <input type="text"
+                       class="form-control"
+                       id="lastName"
+                       asp-for="LastName"
+                       placeholder="Иванов"
+                       required />
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="patronymic" class="form-label">Отчество (опционально)</label>
+            <input type="text"
+                   class="form-control"
+                   id="patronymic"
+                   asp-for="Patronymic"
+                   placeholder="Петрович" />
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email"
+                   class="form-control"
+                   id="email"
+                   asp-for="Email"
+                   placeholder="user@example.com"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Пароль</label>
+            <input type="password"
+                   class="form-control"
+                   id="password"
+                   asp-for="Password"
+                   placeholder="Не менее 6 символов"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label for="confirmPassword" class="form-label">Подтвердите пароль</label>
+            <input type="password"
+                   class="form-control"
+                   id="confirmPassword"
+                   asp-for="ConfirmPassword"
+                   required />
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <p>Уже есть аккаунт? <a asp-page="/Auth/Login">Войти</a></p>
+    </div>
+</div>

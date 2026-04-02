@@ -2,9 +2,9 @@
 {
     public class JwtSettings
     {
-        public required string Secret { get; set; }
-        public required string Issuer { get; set; }
-        public required string Audience { get; set; }
+        public string? Secret { get; set; } = Environment.GetEnvironmentVariable("JWT_SECRET");
+        public string Issuer { get; set; } = "ChatR";
+        public string Audience { get; set; } = "ChatR";
         public int TokenLifetimeMinutes { get; set; } = 60;
     }
 }

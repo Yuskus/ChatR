@@ -1,5 +1,6 @@
 ﻿using ChatR.Models;
 using ChatR.Repos;
+using BCryptNet = BCrypt.Net.BCrypt;
 
 namespace ChatR.Services;
 
@@ -30,6 +31,28 @@ public class UserService
             throw new ArgumentException("Некорректный формат email", nameof(email));
 
         return await _userRepo.GetByEmailAsync(trimmedEmail);
+    }
+
+    public async Task<User?> Update(int id, string? password, string firstName, string lastName, string? patronymic)
+    {
+        // Валидация пароля
+        if (!string.IsNullOrWhiteSpace(password) && password.Length < 6)
+            throw new ArgumentException("Пароль должен быть не менее 6 символов", nameof(password));
+
+        // Валидация имён
+        if (string.IsNullOrWhiteSpace(firstName))
+            throw new ArgumentException("Имя обязательно", nameof(firstName));
+        if (string.IsNullOrWhiteSpace(lastName))
+            throw new ArgumentException("Фамилия обязательна", nameof(lastName));
+
+        patronymic = string.IsNullOrWhiteSpace(patronymic) ? null : patronymic.Trim();
+
+        return await _userRepo.Update(
+            id,
+            password != null ? BCryptNet.HashPassword(password) : null,
+            firstName,
+            lastName,
+            patronymic);
     }
 
     public async Task DeleteAsync(int id)

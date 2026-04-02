@@ -16,11 +16,10 @@ public class AuthService
     private readonly JwtSettings _jwtSettings;
 
     public AuthService(
-        UserRepo userRepo,
-        JwtSettings jwtSettings)
+        UserRepo userRepo)
     {
         _userRepo = userRepo;
-        _jwtSettings = jwtSettings;
+        _jwtSettings = new JwtSettings();
     }
 
     public async Task<bool> RegisterAsync(

@@ -1,9 +1,145 @@
 ﻿@page
-@model IndexModel
+@model ChatR.Pages.IndexModel
 @{
-    ViewData["Title"] = "Домашняя страница";
+    ViewData["Title"] = "Ваши комнаты";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Добро пожаловать!</h1>
+<div class="container mt-4">
+    <h3>Добро пожаловать, @Model.CurrentUserEmail!</h3>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <!-- Форма создания комнаты -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Создать новую комнату</h5>
+            <form method="post" asp-page-handler="Create">
+                @Html.AntiForgeryToken()
+                <div class="input-group">
+                    <input type="text"
+                           class="form-control"
+                           asp-for="NewRoomName"
+                           placeholder="Название комнаты"
+                           maxlength="100"
+                           required />
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Список комнат -->
+    <h4>Ваши комнаты</h4>
+    @if (Model.UserRooms.Any())
+    {
+        <div class="list-group">
+            @foreach (var room in Model.UserRooms)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@room.Name</strong>
+                        <small class="text-muted d-block">
+                            Создана: @room.CreatedAt.ToString("dd.MM.yyyy")
+                        </small>
+                    </div>
+                    <div>
+                        <form method="post" asp-page-handler="Join" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="roomId" value="@room.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Войти</button>
+                        </form>
+
+                        <!-- Кнопка вызова модалки -->
+                        <button type="button"
+                                class="btn btn-sm btn-outline-success ms-2"
+                                data-bs-toggle="modal"
+                                data-bs-target="#addMemberModal"
+                                data-room-id="@room.Id">
+                            Добавить участника
+                        </button>
+
+                        <form method="post" asp-page-handler="Delete" class="d-inline ms-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="roomId" value="@room.Id" />
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Удалить комнату?')">
+                                Удалить
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">У вас пока нет комнат. Создайте первую!</p>
+    }
 </div>
+
+<!-- Модальное окно -->
+<div class="modal fade" id="addMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить участника</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="AddMember">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" name="roomId" id="modalRoomId" />
+
+                    <div class="mb-3">
+                        <label for="userIdentifier" class="form-label">Email или ID пользователя</label>
+                        <input type="text"
+                               class="form-control"
+                               id="userIdentifier"
+                               name="userIdentifier"
+                               placeholder="Введите email или ID" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.FoundUserError))
+                    {
+                        <div class="alert alert-danger">@Model.FoundUserError</div>
+                    }
+                    @if (Model.FoundUser != null)
+                    {
+                        <div class="alert alert-success">
+                            Найден: <strong>@Model.FoundUser.Email</strong>
+                            (@Model.FoundUser.FirstName @Model.FoundUser.LastName)
+                            <input type="hidden" name="userId" value="@Model.FoundUser.Id" />
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        Добавить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        // Передача roomId в форму
+        document.querySelectorAll('[data-bs-target="#addMemberModal"]').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const roomId = this.dataset.roomId;
+                document.getElementById('modalRoomId').value = roomId;
+            });
+        });
+    </script>
+}

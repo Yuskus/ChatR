@@ -67,6 +67,14 @@ public class UserInRoomService
         return await _userInRoomRepo.GetByRoomIdAsync(roomId);
     }
 
+    public async Task<List<UserInRoom>> GetByUserIdAsync(int userId)
+    {
+        if (userId <= 0)
+            throw new ArgumentException("ID должно быть положительным числом", nameof(userId));
+
+        return await _userInRoomRepo.GetByUserIdAsync(userId);
+    }
+
     public async Task<UserInRoom?> GetByUserAndRoomAsync(int userId, int roomId)
     {
         if (userId <= 0)

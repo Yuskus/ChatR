@@ -37,6 +37,15 @@ public class UserInRoomRepo
             .ToListAsync();
     }
 
+    public async Task<List<UserInRoom>> GetByUserIdAsync(int userId)
+    {
+        return await _context.UsersInRoom
+            .Include(uir => uir.Room)
+            .Where(uir => uir.UserId == userId)
+            .OrderBy(uir => uir.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<UserInRoom?> GetByUserAndRoom(int userId, int roomId)
     {
         return await _context.UsersInRoom

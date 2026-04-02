@@ -1,0 +1,253 @@
+﻿@page
+@model ChatR.Pages.Chat.RoomModel
+@{
+    ViewData["Title"] = $"Чат: {Model.RoomName}";
+}
+
+<div class="container-fluid" style="max-width: 1000px;">
+    <h4>@Model.RoomName</h4>
+
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Комната чата</span>
+            <a asp-page="/Index" class="btn btn-sm btn-outline-secondary">← Назад</a>
+        </div>
+        <div class="card-body p-0">
+            <ul id="messagesList"
+                class="list-group list-group-flush"
+                style="max-height: 60vh; overflow-y: auto; padding: 10px;"
+                data-current-user-id="@Model.CurrentUserId"
+                data-room-id="@Model.RoomId"
+                data-group-name="chat_@Model.RoomId">
+
+                @* 🔥 Рендерим сообщения сразу на сервере *@
+                @foreach (var msg in Model.Messages)
+                {
+                    <li class="list-group-item border-0" data-message-id="@msg.Id">
+                        <strong>@msg.User?.FirstName @msg.User?.LastName</strong>
+                        <small class="text-muted">[@msg.Timestamp.ToString("HH:mm")]</small>
+                        <div>@msg.Content</div>
+
+                        @if (msg.UserId == Model.CurrentUserId)
+                        {
+                            <div class="mt-1">
+                                <button class="btn btn-sm btn-warning edit-btn"
+                                        data-id="@msg.Id"
+                                        data-content="@msg.Content.Replace("\"", "&quot;")">
+                                    Редактировать
+                                </button>
+                                <button class="btn btn-sm btn-danger delete-btn" data-id="@msg.Id">Удалить</button>
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <!-- Форма отправки -->
+    <div class="input-group mb-3">
+        <input type="text"
+               id="messageInput"
+               class="form-control"
+               placeholder="Введите сообщение..."
+               maxlength="5000" />
+        <button id="sendButton" class="btn btn-primary">Отправить</button>
+    </div>
+
+    <!-- Редактирование -->
+    <div id="editForm" class="input-group mb-3 d-none">
+        <input type="hidden" id="editMessageId" />
+        <input type="text" id="editMessageInput" class="form-control" maxlength="5000" />
+        <button id="saveEditButton" class="btn btn-success">Сохранить</button>
+        <button id="cancelEditButton" class="btn btn-secondary">Отмена</button>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
+    <script>
+        const container = document.getElementById("messagesList");
+        const currentUserId = parseInt(container.dataset.currentUserId);
+        const roomId = parseInt(container.dataset.roomId);
+        const groupName = container.dataset.groupName;
+
+        // Прокрутка вниз
+        function scrollToBottom() {
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Вызываем один раз при загрузке
+        scrollToBottom();
+
+        // Подключение к SignalR
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub", {
+                accessTokenFactory: () => getCookie("auth_token")
+            })
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        // Создание элемента сообщения
+        function createMessageElement(msg) {
+            const li = document.createElement("li");
+            li.className = "list-group-item border-0";
+            li.dataset.messageId = msg.id;
+
+            const isMine = msg.userId === currentUserId;
+
+            const time = new Date(msg.timestamp).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            let content = `<strong>${escapeHtml(msg.user?.firstName || '')} ${escapeHtml(msg.user?.lastName || '')}</strong> 
+                          <small class="text-muted">[${time}]</small>
+                          <div>${escapeHtml(msg.content)}</div>`;
+
+            if (isMine) {
+                content += `
+                    <div class="mt-1">
+                        <button class="btn btn-sm btn-warning edit-btn" 
+                                data-id="${msg.id}" 
+                                data-content="${escapeHtml(msg.content)}">Редактировать</button>
+                        <button class="btn btn-sm btn-danger delete-btn" 
+                                data-id="${msg.id}">Удалить</button>
+                    </div>`;
+            }
+
+            li.innerHTML = content;
+            return li;
+        }
+
+        // Экранирование HTML
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Отправка сообщения
+        document.getElementById("sendButton").addEventListener("click", async function () {
+            const input = document.getElementById("messageInput");
+            const content = input.value.trim();
+            if (!content) return;
+
+            try {
+                await connection.invoke("SendMessage", content, currentUserId, roomId);
+                input.value = '';
+            } catch (err) {
+                console.error("Ошибка отправки:", err);
+                alert("Не удалось отправить сообщение");
+            }
+        });
+
+        // Редактирование
+        document.getElementById("saveEditButton").addEventListener("click", async function () {
+            const id = document.getElementById("editMessageId").value;
+            const content = document.getElementById("editMessageInput").value.trim();
+            if (!content) return;
+
+            try {
+                await connection.invoke("UpdateMessage", id, content, currentUserId);
+                exitEditMode();
+            } catch (err) {
+                console.error("Ошибка редактирования:", err);
+            }
+        });
+
+        document.getElementById("cancelEditButton").addEventListener("click", exitEditMode);
+
+        function exitEditMode() {
+            document.getElementById("editForm").classList.add("d-none");
+            document.getElementById("messageInput").focus();
+        }
+
+        // Обработчики событий (делегирование)
+        document.getElementById("messagesList").addEventListener("click", function (e) {
+            if (e.target.classList.contains("delete-btn")) {
+                const id = parseInt(e.target.dataset.id, 10);
+                if (isNaN(id)) {
+                    console.error("Некорректный ID сообщения");
+                    return;
+                }
+
+                if (confirm("Удалить сообщение?")) {
+                    connection.invoke("DeleteMessage", id, currentUserId)
+                        .catch(err => console.error("Ошибка удаления:", err));
+                }
+            }
+
+            if (e.target.classList.contains("edit-btn")) {
+                const id = parseInt(e.target.dataset.id, 10);
+                if (isNaN(id)) {
+                    console.error("Некорректный ID сообщения");
+                    return;
+                }
+
+                const content = e.target.dataset.content;
+                document.getElementById("editMessageId").value = id;
+                document.getElementById("editMessageInput").value = content;
+                document.getElementById("editForm").classList.remove("d-none");
+                document.getElementById("messageInput").blur();
+            }
+        });
+
+        // SignalR события
+        connection.on("ReceiveMessage", function (id, content, userId, userName, timestamp) {
+            const [firstName, lastName] = userName.split(' ');
+
+            const msg = {
+                id: id,
+                content: content,
+                userId: userId,
+                user: { firstName: firstName, lastName: lastName || '' },
+                timestamp: timestamp
+            };
+
+            const el = createMessageElement(msg);
+            container.appendChild(el);
+            scrollToBottom();
+        });
+
+        connection.on("MessageDeleted", function (id) {
+            const el = document.querySelector(`[data-message-id="${id}"]`);
+            if (el) el.remove();
+        });
+
+        connection.on("MessageUpdated", function (id, content) {
+            const el = document.querySelector(`[data-message-id="${id}"]`);
+            if (el) {
+                const contentDiv = el.querySelector("div");
+                if (contentDiv) contentDiv.textContent = content;
+            }
+        });
+
+        // Подключение
+        async function start() {
+            try {
+                await connection.start();
+                console.log("SignalR подключён");
+                await connection.invoke("JoinGroup", groupName);
+            } catch (err) {
+                console.error("Ошибка подключения:", err);
+                setTimeout(start, 5000);
+            }
+        }
+
+        connection.onclose(async () => {
+            console.log("Подключение потеряно. Переподключение...");
+            await start();
+        });
+
+        start();
+
+        // Получение токена из куки
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+    </script>
+}

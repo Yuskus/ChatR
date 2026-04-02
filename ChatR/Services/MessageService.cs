@@ -27,7 +27,7 @@ public class MessageService
         return await _messageRepo.GetByIdAsync(id);
     }
 
-    public async Task AddAsync(string content, int userId, int roomId)
+    public async Task<Message?> AddAsync(string content, int userId, int roomId)
     {
         if (string.IsNullOrWhiteSpace(content))
             throw new ArgumentException("Содержание сообщения обязательно", nameof(content));
@@ -56,7 +56,7 @@ public class MessageService
         if (!roomExists)
             throw new ArgumentException($"Комната с ID {roomId} не найдена", nameof(roomId));
 
-        await _messageRepo.Add(new Message
+        return await _messageRepo.Add(new Message
         {
             Content = content,
             UserId = userId,
