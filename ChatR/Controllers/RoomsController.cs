@@ -25,7 +25,7 @@ public class RoomsController : ControllerBase
     {
         try
         {
-            var room = await _roomService.GetByIdAsync(id);
+            var room = await _roomService.GetById(id);
 
             if (room == null)
                 return NotFound(new { message = "Комната не найдена" });
@@ -50,7 +50,7 @@ public class RoomsController : ControllerBase
     {
         try
         {
-            await _roomService.AddAsync(request.Name);
+            await _roomService.Add(request.Name);
 
             return Ok(new { message = "Комната создана" });
         }
@@ -75,7 +75,7 @@ public class RoomsController : ControllerBase
     {
         try
         {
-            await _roomService.CloseAsync(id);
+            await _roomService.Close(id);
 
             return Ok(new { message = "Комната успешно закрыта" });
         }
@@ -99,7 +99,7 @@ public class RoomsController : ControllerBase
     {
         try
         {
-            await _roomService.DeleteAsync(id);
+            await _roomService.Delete(id);
 
             return Ok(new { message = "Комната удалена" });
         }

@@ -28,7 +28,7 @@ public class UsersInRoomController : ControllerBase
     {
         try
         {
-            await _userInRoomService.AddAsync(request.UserId, roomId, request.Role);
+            await _userInRoomService.Add(request.UserId, roomId, request.Role);
 
             return Ok(new { message = "Успешно присоединились к чату" });
         }
@@ -49,7 +49,7 @@ public class UsersInRoomController : ControllerBase
     {
         try
         {
-            await _userInRoomService.DeleteAsync(userId, roomId);
+            await _userInRoomService.Delete(userId, roomId);
 
             return Ok(new { message = "Вы успешно покинули чат" });
         }

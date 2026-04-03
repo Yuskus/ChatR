@@ -28,7 +28,7 @@ public class UserInRoomRepo
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<UserInRoom>> GetByRoomIdAsync(int roomId)
+    public async Task<List<UserInRoom>> GetByRoomId(int roomId)
     {
         return await _context.UsersInRoom
             .Include(uir => uir.User)
@@ -37,7 +37,7 @@ public class UserInRoomRepo
             .ToListAsync();
     }
 
-    public async Task<List<UserInRoom>> GetByUserIdAsync(int userId)
+    public async Task<List<UserInRoom>> GetByUserId(int userId)
     {
         return await _context.UsersInRoom
             .Include(uir => uir.Room)

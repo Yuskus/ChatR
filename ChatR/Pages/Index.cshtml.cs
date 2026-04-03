@@ -52,7 +52,7 @@ public class IndexModel : PageModel
 
         try
         {
-            var room = await _roomService.AddAsync(NewRoomName);
+            var room = await _roomService.Add(NewRoomName);
             if (room == null)
             {
                 TempData["ErrorMessage"] = "Failed to create room";
@@ -62,10 +62,10 @@ public class IndexModel : PageModel
             TempData["SuccessMessage"] = "The room is created";
 
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
-            var user = await _userService.GetByEmailAsync(email!);
+            var user = await _userService.GetByEmail(email!);
             if (user != null)
             {
-                await _userInRoomService.AddAsync(user.Id, room.Id, RoomRole.Admin);
+                await _userInRoomService.Add(user.Id, room.Id, RoomRole.Admin);
             }
         }
         catch (ArgumentException ex)
@@ -85,7 +85,7 @@ public class IndexModel : PageModel
         try
         {
             var email = User.Identity?.Name ?? User.FindFirst(ClaimTypes.Email)?.Value;
-            var user = await _userService.GetByEmailAsync(email!);
+            var user = await _userService.GetByEmail(email!);
             if (user == null) return Unauthorized();
 
             return RedirectToPage("/Chat/Room", new { roomId });
@@ -101,7 +101,7 @@ public class IndexModel : PageModel
     {
         try
         {
-            await _roomService.DeleteAsync(roomId);
+            await _roomService.Delete(roomId);
             TempData["SuccessMessage"] = "The room has been deleted.";
         }
         catch (Exception)
@@ -122,17 +122,17 @@ public class IndexModel : PageModel
         }
 
         var adminEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-        var admin = await _userService.GetByEmailAsync(adminEmail!);
+        var admin = await _userService.GetByEmail(adminEmail!);
         if (admin == null) return Unauthorized();
 
-        var room = await _roomService.GetByIdAsync(roomId);
+        var room = await _roomService.GetById(roomId);
         if (room == null)
         {
             TempData["ErrorMessage"] = "Room not found";
             return await LoadRoomsAsync();
         }
 
-        var membership = await _userInRoomService.GetByUserAndRoomAsync(admin.Id, roomId);
+        var membership = await _userInRoomService.GetByUserAndRoom(admin.Id, roomId);
         if (membership?.RoomRole != RoomRole.Admin)
         {
             TempData["ErrorMessage"] = "Only the administrator can add members";
@@ -143,11 +143,11 @@ public class IndexModel : PageModel
         User? foundUser = null;
         if (int.TryParse(userIdentifier, out var userId))
         {
-            foundUser = await _userService.GetByIdAsync(userId);
+            foundUser = await _userService.GetById(userId);
         }
         else
         {
-            foundUser = await _userService.GetByEmailAsync(userIdentifier);
+            foundUser = await _userService.GetByEmail(userIdentifier);
         }
 
         if (foundUser == null)
@@ -158,7 +158,7 @@ public class IndexModel : PageModel
         }
 
         // Проверим, не состоит ли уже
-        var existing = await _userInRoomService.GetByUserAndRoomAsync(foundUser.Id, roomId);
+        var existing = await _userInRoomService.GetByUserAndRoom(foundUser.Id, roomId);
         if (existing != null)
         {
             TempData["ErrorMessage"] = "The user is already in the room";
@@ -168,7 +168,7 @@ public class IndexModel : PageModel
         // Добавляем
         try
         {
-            await _userInRoomService.AddAsync(foundUser.Id, roomId, RoomRole.Member);
+            await _userInRoomService.Add(foundUser.Id, roomId, RoomRole.Member);
             TempData["SuccessMessage"] = $"User {foundUser.Email} has been added to the room";
         }
         catch (Exception ex)
@@ -187,18 +187,18 @@ public class IndexModel : PageModel
             if (string.IsNullOrEmpty(email))
                 return RedirectToPage("/Auth/Login");
 
-            var user = await _userService.GetByEmailAsync(email);
+            var user = await _userService.GetByEmail(email);
             if (user == null)
                 return RedirectToPage("/Auth/Login");
 
             CurrentUserId = user.Id;
             CurrentUserEmail = user.Email;
 
-            var memberships = await _userInRoomService.GetByUserIdAsync(user.Id);
+            var memberships = await _userInRoomService.GetByUserId(user.Id);
             List<Room> rooms = [];
             foreach (var member in memberships)
             {
-                var room = await _roomService.GetByIdAsync(member.RoomId);
+                var room = await _roomService.GetById(member.RoomId);
 
                 if (room != null)
                 {

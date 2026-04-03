@@ -32,16 +32,14 @@ public class LoginModel : PageModel
     {
         if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
         {
-            Console.WriteLine(1);
             ErrorMessage = "Email и пароль об€зательны";
             return Page();
         }
 
-        var token = await _authService.LoginAsync(Email, Password);
+        var token = await _authService.Login(Email, Password);
 
         if (token == null)
         {
-            Console.WriteLine(2);
             ErrorMessage = "Ќеверный email или пароль";
             return Page();
         }
@@ -55,7 +53,6 @@ public class LoginModel : PageModel
             Expires = DateTime.UtcNow.AddMinutes(60)
         });
 
-        Console.WriteLine(3);
         return RedirectToPage("/Index");
     }
 }

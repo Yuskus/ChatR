@@ -1,10 +1,12 @@
 ﻿using ChatR.Data;
+using ChatR.Hosted;
 using ChatR.Hubs;
 using ChatR.Models.Constatns;
 using ChatR.Models.Settings;
 using ChatR.Repos;
 using ChatR.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -13,6 +15,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // http
 builder.Services.AddControllers();
+
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X‑XSRF‑Token";
+    options.Cookie.Name = ".ChatR.Antiforgery";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.FormFieldName = "__RequestVerificationToken";
+});
 
 // cors
 builder.Services.AddCors(options =>
@@ -25,10 +36,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddAntiforgery(options =>
-{
-    options.HeaderName = "X-CSRF-TOKEN";
-});
+// background
+builder.Services.AddHostedService<CleanupService>();
 
 // auth
 builder.Services.AddAuthorization();
@@ -83,6 +92,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options
     .UseNpgsql(Environment.GetEnvironmentVariable(Env.DB_CONN_ENV_NAME)));
 
 // razor
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(@"./keys"))
+    .SetApplicationName("ChatR")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
+
 builder.Services.AddRazorPages();
 
 // signalr

@@ -48,6 +48,8 @@ public class ApplicationDbContext : DbContext
                 .HasDefaultValueSql("now()")
                 .IsRequired();
             user
+                .Property(x => x.LastLogin);
+            user
                 .Property(p => p.Email)
                 .IsRequired();
             user

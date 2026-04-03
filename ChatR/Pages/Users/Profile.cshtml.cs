@@ -32,7 +32,7 @@ public class ProfileModel : PageModel
         if (string.IsNullOrEmpty(emailClaim))
             return RedirectToPage("/Auth/Login");
 
-        var user = await _userService.GetByEmailAsync(emailClaim);
+        var user = await _userService.GetByEmail(emailClaim);
         if (user == null)
             return RedirectToPage("/Auth/Login");
 
@@ -50,7 +50,7 @@ public class ProfileModel : PageModel
         if (string.IsNullOrEmpty(emailClaim))
             return RedirectToPage("/Auth/Login");
 
-        var currentUser = await _userService.GetByEmailAsync(emailClaim);
+        var currentUser = await _userService.GetByEmail(emailClaim);
         if (currentUser == null)
             return RedirectToPage("/Auth/Login");
 
@@ -110,13 +110,13 @@ public class ProfileModel : PageModel
         if (string.IsNullOrEmpty(emailClaim))
             return RedirectToPage("/Auth/Login");
 
-        var user = await _userService.GetByEmailAsync(emailClaim);
+        var user = await _userService.GetByEmail(emailClaim);
         if (user == null)
             return RedirectToPage("/Auth/Login");
 
         try
         {
-            await _userService.DeleteAsync(user.Id);
+            await _userService.Delete(user.Id);
 
             // Удаляем куку
             if (Request.Cookies["auth_token"] != null)

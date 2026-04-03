@@ -145,9 +145,16 @@
 
         // Редактирование
         document.getElementById("saveEditButton").addEventListener("click", async function () {
-            const id = document.getElementById("editMessageId").value;
+            const idInput = document.getElementById("editMessageId").value;
             const content = document.getElementById("editMessageInput").value.trim();
             if (!content) return;
+
+            // Преобразуем в число
+            const id = parseInt(idInput, 10);
+            if (isNaN(id)) {
+                console.error("Некорректный ID сообщения:", idInput);
+                return;
+            }
 
             try {
                 await connection.invoke("UpdateMessage", id, content, currentUserId);

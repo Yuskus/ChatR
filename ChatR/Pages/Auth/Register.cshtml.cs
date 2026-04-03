@@ -48,7 +48,7 @@ public class RegisterModel : PageModel
 
         try
         {
-            bool success = await _authService.RegisterAsync(
+            bool success = await _authService.Register(
                 email: Email,
                 password: Password,
                 firstName: FirstName,

@@ -19,7 +19,7 @@ public class UserInRoomService
         _roomRepo = roomRepo;
     }
 
-    public async Task AddAsync(int userId, int roomId, RoomRole role = RoomRole.Member)
+    public async Task Add(int userId, int roomId, RoomRole role = RoomRole.Member)
     {
         if (userId <= 0)
             throw new ArgumentException("ID должно быть положительным числом", nameof(userId));
@@ -27,11 +27,11 @@ public class UserInRoomService
         if (roomId <= 0)
             throw new ArgumentException("ID должно быть положительным числом", nameof(roomId));
 
-        var userExists = await _userRepo.GetByIdAsync(userId) != null;
+        var userExists = await _userRepo.GetById(userId) != null;
         if (!userExists)
             throw new ArgumentException($"Пользователь с ID {userId} не найден.", nameof(userId));
 
-        var roomExists = await _roomRepo.GetByIdAsync(roomId) != null;
+        var roomExists = await _roomRepo.GetById(roomId) != null;
         if (!roomExists)
             throw new ArgumentException($"Комната с ID {roomId} не найдена.", nameof(roomId));
 
@@ -48,7 +48,7 @@ public class UserInRoomService
         });
     }
 
-    public async Task DeleteAsync(int userId, int roomId)
+    public async Task Delete(int userId, int roomId)
     {
         if (userId <= 0)
             throw new ArgumentException("ID должно быть положительным числом", nameof(userId));
@@ -59,23 +59,23 @@ public class UserInRoomService
         await _userInRoomRepo.Delete(userId, roomId);
     }
 
-    public async Task<List<UserInRoom>> GetByRoomIdAsync(int roomId)
+    public async Task<List<UserInRoom>> GetByRoomId(int roomId)
     {
         if (roomId <= 0)
             throw new ArgumentException("ID должно быть положительным числом", nameof(roomId));
 
-        return await _userInRoomRepo.GetByRoomIdAsync(roomId);
+        return await _userInRoomRepo.GetByRoomId(roomId);
     }
 
-    public async Task<List<UserInRoom>> GetByUserIdAsync(int userId)
+    public async Task<List<UserInRoom>> GetByUserId(int userId)
     {
         if (userId <= 0)
             throw new ArgumentException("ID должно быть положительным числом", nameof(userId));
 
-        return await _userInRoomRepo.GetByUserIdAsync(userId);
+        return await _userInRoomRepo.GetByUserId(userId);
     }
 
-    public async Task<UserInRoom?> GetByUserAndRoomAsync(int userId, int roomId)
+    public async Task<UserInRoom?> GetByUserAndRoom(int userId, int roomId)
     {
         if (userId <= 0)
             throw new ArgumentException("ID должно быть положительным числом", nameof(userId));

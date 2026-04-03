@@ -13,38 +13,50 @@ public class RoomRepo
         _context = context;
     }
 
-    public async Task<Room?> GetByIdAsync(int id)
+    public async Task<Room?> GetById(int id)
     {
         return await _context.Rooms
             .FirstOrDefaultAsync(r => r.Id == id);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name)
+    public async Task<bool> ExistsByName(string name)
     {
         return await _context.Rooms
             .AnyAsync(r => r.Name.ToLower() == name.Trim().ToLower());
     }
 
-    public async Task<Room?> AddAsync(Room room)
+    public async Task<Room?> Add(Room room)
     {
         _context.Rooms.Add(room);
         await _context.SaveChangesAsync();
 
-        return await GetByIdAsync(room.Id);
+        return await GetById(room.Id);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task Delete(int id)
     {
-        var room = await GetByIdAsync(id);
+        var room = await GetById(id);
         if (room == null) return;
 
         _context.Rooms.Remove(room);
         await _context.SaveChangesAsync();
     }
 
-    public async Task CloseAsync(int id)
+    public async Task DeleteInactiveRoomsBefore(DateTime olderThan)
     {
-        var room = await GetByIdAsync(id);
+        var oldRooms = await _context.Rooms
+            .Where(x =>
+                (x.LastMessage == null && x.CreatedAt < olderThan) ||
+                x.LastMessage < olderThan)
+            .ToListAsync();
+
+        _context.Rooms.RemoveRange(oldRooms);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task Close(int id)
+    {
+        var room = await GetById(id);
         if (room != null && !room.IsClosed)
         {
             room.IsClosed = true;

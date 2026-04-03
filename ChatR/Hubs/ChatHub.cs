@@ -27,31 +27,41 @@ namespace ChatR.Hubs
 
         public async Task SendMessage(string content, int userId, int roomId)
         {
-            var message = await _messageService.AddAsync(content, userId, roomId);
+            var message = await _messageService.Add(content, userId, roomId);
 
-            await Clients.Group($"chat_{roomId}").SendAsync("ReceiveMessage",
-                message!.Id,
-                message.Content,
-                message.UserId,
-                $"{message.User!.FirstName} {message.User.LastName}",
-                message.Timestamp);
+            if (message != null)
+            {
+                var fullname = message.User != null
+                    ? $"{message.User.FirstName} {message.User.LastName}"
+                    : "Unknown Unknown";
+
+                await Clients.Group($"chat_{roomId}").SendAsync("ReceiveMessage",
+                    message.Id,
+                    message.Content,
+                    message.UserId,
+                    fullname,
+                    message.Timestamp);
+            }
         }
 
         public async Task DeleteMessage(int messageId, int userId)
         {
-            var message = await _messageService.GetByIdAsync(messageId);
-            if (message?.UserId != userId) return;
+            var message = await _messageService.Delete(messageId, userId);
 
-            await _messageService.DeleteAsync(messageId);
-
-            await Clients.Group($"chat_{message.RoomId}").SendAsync("MessageDeleted", messageId);
+            if (message != null)
+            {
+                await Clients.Group($"chat_{message.RoomId}").SendAsync("MessageDeleted", messageId);
+            }
         }
 
         public async Task UpdateMessage(int messageId, string content, int userId)
         {
-            //var message = await _messageService.UpdateAsync(messageId, content, userId);
+            var message = await _messageService.Update(messageId, content, userId);
 
-            //await Clients.Group($"chat_{message.RoomId}").SendAsync("MessageUpdated", messageId, content);
+            if (message != null)
+            {
+                await Clients.Group($"chat_{message.RoomId}").SendAsync("MessageUpdated", messageId, content);
+            }
         }
     }
 }

@@ -29,7 +29,7 @@ public class MessagesController : ControllerBase
             if (request == null)
                 return BadRequest(new { message = "Тело запроса не может быть пустым" });
 
-            await _messageService.AddAsync(request.Content, request.UserId, roomId);
+            await _messageService.Add(request.Content, request.UserId, roomId);
 
             return Ok();
         }
@@ -54,7 +54,7 @@ public class MessagesController : ControllerBase
     {
         try
         {
-            var messages = await _messageService.GetListAsync(roomId, ascending);
+            var messages = await _messageService.GetList(roomId, ascending);
 
             return Ok(messages);
         }

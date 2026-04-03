@@ -22,7 +22,7 @@ public class AuthService
         _jwtSettings = new JwtSettings();
     }
 
-    public async Task<bool> RegisterAsync(
+    public async Task<bool> Register(
         string email,
         string password,
         string firstName,
@@ -51,12 +51,12 @@ public class AuthService
         patronymic = string.IsNullOrWhiteSpace(patronymic) ? null : patronymic.Trim();
 
         // Проверка на дубликат
-        if (await _userRepo.ExistsByEmailAsync(email))
+        if (await _userRepo.ExistsByEmail(email))
             return false;
 
         try
         {
-            await _userRepo.AddAsync(new User
+            await _userRepo.Add(new User
             {
                 Email = email,
                 Password = BCryptNet.HashPassword(password),
@@ -81,17 +81,24 @@ public class AuthService
         }
     }
 
-    public async Task<string?> LoginAsync(string email, string password)
+    public async Task<string?> Login(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             return null;
 
-        var user = await _userRepo.GetByEmailAsync(email.Trim().ToLower());
+        var user = await _userRepo.GetByEmail(email.Trim().ToLower());
 
         if (user == null || !BCryptNet.Verify(password, user.Password))
             return null;
 
-        return GenerateJwtToken(user);
+        string? token = GenerateJwtToken(user);
+
+        if (token == null)
+            return null;
+
+        await _userRepo.Login(user.Id);
+
+        return token;
     }
 
     private string GenerateJwtToken(User user)

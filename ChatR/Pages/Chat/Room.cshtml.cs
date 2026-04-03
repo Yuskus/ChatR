@@ -39,7 +39,7 @@ public class RoomModel : PageModel
         if (string.IsNullOrEmpty(email))
             return RedirectToPage("/Auth/Login");
 
-        var user = await _userService.GetByEmailAsync(email);
+        var user = await _userService.GetByEmail(email);
         if (user == null)
             return RedirectToPage("/Auth/Login");
 
@@ -47,18 +47,18 @@ public class RoomModel : PageModel
         CurrentUserEmail = user.Email;
 
         // Проверяем, состоит ли пользователь в комнате
-        var membership = await _userInRoomService.GetByUserAndRoomAsync(user.Id, roomId);
+        var membership = await _userInRoomService.GetByUserAndRoom(user.Id, roomId);
         if (membership == null)
             return Forbid(); // Не состоит — доступ запрещён
 
         // Получаем имя комнаты
-        var room = await _roomService.GetByIdAsync(roomId);
+        var room = await _roomService.GetById(roomId);
         if (room == null)
             return NotFound();
 
         RoomName = room.Name;
 
-        Messages = await _messageService.GetListAsync(roomId, ascending: true);
+        Messages = await _messageService.GetList(roomId, ascending: true);
 
         return Page();
     }

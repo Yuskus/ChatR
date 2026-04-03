@@ -13,15 +13,15 @@ public class UserService
         _userRepo = userRepo;
     }
 
-    public async Task<User?> GetByIdAsync(int id)
+    public async Task<User?> GetById(int id)
     {
         if (id <= 0)
             throw new ArgumentException("ID должно быть положительным числом", nameof(id));
 
-        return await _userRepo.GetByIdAsync(id);
+        return await _userRepo.GetById(id);
     }
 
-    public async Task<User?> GetByEmailAsync(string email)
+    public async Task<User?> GetByEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("Email не может быть пустым", nameof(email));
@@ -30,7 +30,7 @@ public class UserService
         if (!IsValidEmail(trimmedEmail))
             throw new ArgumentException("Некорректный формат email", nameof(email));
 
-        return await _userRepo.GetByEmailAsync(trimmedEmail);
+        return await _userRepo.GetByEmail(trimmedEmail);
     }
 
     public async Task<User?> Update(int id, string? password, string firstName, string lastName, string? patronymic)
@@ -55,12 +55,24 @@ public class UserService
             patronymic);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task Delete(int id)
     {
         if (id <= 0)
             throw new ArgumentException("ID должно быть положительным числом", nameof(id));
 
-        await _userRepo.DeleteAsync(id);
+        await _userRepo.Delete(id);
+    }
+
+    public async Task DeleteInactiveUsers(DateTime olderThan)
+    {
+        try
+        {
+            await _userRepo.DeleteInactiveUsersBefore(olderThan);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[UserService] Ошибка при удалении пользователей: {ex.Message}");
+        }
     }
 
     private static bool IsValidEmail(string email)

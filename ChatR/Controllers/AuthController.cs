@@ -26,7 +26,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            bool success = await _authService.RegisterAsync(
+            bool success = await _authService.Register(
                 email: request.Email,
                 password: request.Password,
                 firstName: request.FirstName,
@@ -56,7 +56,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var token = await _authService.LoginAsync(request.Email, request.Password);
+            var token = await _authService.Login(request.Email, request.Password);
 
             if (token == null)
                 return Unauthorized(new { message = "Неверный email или пароль" });

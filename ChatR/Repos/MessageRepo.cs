@@ -13,7 +13,7 @@ public class MessageRepo
         _context = context;
     }
 
-    public async Task<Message?> GetByIdAsync(int id)
+    public async Task<Message?> GetById(int id)
     {
         return await _context.Messages
             .Include(m => m.User)
@@ -23,18 +23,47 @@ public class MessageRepo
 
     public async Task<Message?> Add(Message message)
     {
+        var room = await _context.Rooms.FirstOrDefaultAsync(x => x.Id == message.RoomId);
+        if (room == null) return null;
+
+        room.LastMessage = message.Timestamp;
+
         _context.Messages.Add(message);
+
         await _context.SaveChangesAsync();
 
-        return await GetByIdAsync(message.Id);
+        return await GetById(message.Id);
     }
 
-    public async Task Delete(int id)
+    public async Task<Message?> Update(int id, string content)
     {
-        var message = await GetByIdAsync(id);
-        if (message == null) return;
+        var message = await GetById(id);
+        if (message == null) return null;
+
+        message.Content = content;
+        await _context.SaveChangesAsync();
+
+        return await GetById(id);
+    }
+
+    public async Task<Message?> Delete(int id)
+    {
+        var message = await GetById(id);
+        if (message == null) return null;
 
         _context.Messages.Remove(message);
+        await _context.SaveChangesAsync();
+
+        return message;
+    }
+
+    public async Task DeleteOldMessagesBefore(DateTime olderThan)
+    {
+        var oldMessages = await _context.Messages
+            .Where(x => x.Timestamp < olderThan)
+            .ToListAsync();
+
+        _context.RemoveRange(oldMessages);
         await _context.SaveChangesAsync();
     }
 
