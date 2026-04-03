@@ -1,4 +1,5 @@
 ﻿@page
+@using ChatR.Models.Structure
 @model ChatR.Pages.Auth.RegisterModel
 @{
     ViewData["Title"] = "Регистрация";
@@ -87,6 +88,6 @@
     </form>
 
     <div class="text-center mt-3">
-        <p>Уже есть аккаунт? <a asp-page="/Auth/Login">Войти</a></p>
+        <p>Уже есть аккаунт? <a asp-page="@Routes.Pages.Auth.Login">Войти</a></p>
     </div>
 </div>

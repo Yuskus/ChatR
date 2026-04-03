@@ -1,5 +1,7 @@
+using ChatR.Models.Structure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using AuthConst = ChatR.Models.Constatns.Auth;
 
 namespace ChatR.Pages.Auth;
 
@@ -8,9 +10,9 @@ public class LogoutModel : PageModel
     public IActionResult OnGet()
     {
         // Удаляем куку с токеном
-        if (Request.Cookies["auth_token"] != null)
+        if (Request.Cookies[AuthConst.TOKEN_COOKIE_NAME] != null)
         {
-            Response.Cookies.Delete("auth_token", new CookieOptions
+            Response.Cookies.Delete(AuthConst.TOKEN_COOKIE_NAME, new CookieOptions
             {
                 Path = "/",
                 Secure = false, // Поставьте true, если используете HTTPS
@@ -19,6 +21,6 @@ public class LogoutModel : PageModel
         }
 
         // Перенаправляем на вход
-        return RedirectToPage("/Auth/Login");
+        return RedirectToPage(Routes.Pages.Auth.Login);
     }
 }

@@ -1,4 +1,5 @@
 using ChatR.Models;
+using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -37,11 +38,11 @@ public class RoomModel : PageModel
 
         var email = User.FindFirst(ClaimTypes.Email)?.Value;
         if (string.IsNullOrEmpty(email))
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
 
         var user = await _userService.GetByEmail(email);
         if (user == null)
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
 
         CurrentUserId = user.Id;
         CurrentUserEmail = user.Email;

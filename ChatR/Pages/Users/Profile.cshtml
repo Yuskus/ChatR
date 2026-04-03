@@ -1,4 +1,5 @@
 ﻿@page
+@using ChatR.Models.Structure
 @model ChatR.Pages.Users.ProfileModel
 @{
     ViewData["Title"] = "Профиль";
@@ -57,7 +58,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-        <a asp-page="/Index" class="btn btn-secondary ms-2">Отмена</a>
+        <a asp-page="@Routes.Pages.Index" class="btn btn-secondary ms-2">Отмена</a>
     </form>
 
     <hr />

@@ -3,6 +3,7 @@ using ChatR.Hosted;
 using ChatR.Hubs;
 using ChatR.Models.Constatns;
 using ChatR.Models.Settings;
+using ChatR.Models.Structure;
 using ChatR.Repos;
 using ChatR.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -63,7 +64,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
-                var token = context.Request.Cookies["auth_token"];
+                var token = context.Request.Cookies[Auth.TOKEN_COOKIE_NAME];
                 if (!string.IsNullOrEmpty(token))
                 {
                     context.Token = token;
@@ -111,7 +112,7 @@ var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler(Routes.Pages.Error);
     app.UseHsts();
 }
 

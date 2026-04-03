@@ -1,7 +1,9 @@
+using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Claims;
+using AuthConst = ChatR.Models.Constatns.Auth;
 
 namespace ChatR.Pages.Users;
 
@@ -30,11 +32,11 @@ public class ProfileModel : PageModel
     {
         var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
         if (string.IsNullOrEmpty(emailClaim))
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
 
         var user = await _userService.GetByEmail(emailClaim);
         if (user == null)
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
 
         // Заполняем модель
         FirstName = user.FirstName;
@@ -48,11 +50,11 @@ public class ProfileModel : PageModel
     {
         var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
         if (string.IsNullOrEmpty(emailClaim))
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
 
         var currentUser = await _userService.GetByEmail(emailClaim);
         if (currentUser == null)
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
 
         // Валидация входных данных
         if (string.IsNullOrWhiteSpace(FirstName))
@@ -108,23 +110,23 @@ public class ProfileModel : PageModel
     {
         var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
         if (string.IsNullOrEmpty(emailClaim))
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
 
         var user = await _userService.GetByEmail(emailClaim);
         if (user == null)
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
 
         try
         {
             await _userService.Delete(user.Id);
 
             // Удаляем куку
-            if (Request.Cookies["auth_token"] != null)
+            if (Request.Cookies[AuthConst.TOKEN_COOKIE_NAME] != null)
             {
-                Response.Cookies.Delete("auth_token");
+                Response.Cookies.Delete(AuthConst.TOKEN_COOKIE_NAME);
             }
 
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
         }
         catch (Exception)
         {

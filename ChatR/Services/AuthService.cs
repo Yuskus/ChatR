@@ -101,8 +101,10 @@ public class AuthService
         return token;
     }
 
-    private string GenerateJwtToken(User user)
+    private string? GenerateJwtToken(User user)
     {
+        if (_jwtSettings.Secret == null) return null;
+
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 

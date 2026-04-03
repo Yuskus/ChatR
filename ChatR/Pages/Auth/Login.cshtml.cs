@@ -1,6 +1,8 @@
+using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using AuthConst = ChatR.Models.Constatns.Auth;
 
 namespace ChatR.Pages.Auth;
 
@@ -45,14 +47,14 @@ public class LoginModel : PageModel
         }
 
         // Сохраняем токен в куки
-        Response.Cookies.Append("auth_token", token, new CookieOptions
+        Response.Cookies.Append(AuthConst.TOKEN_COOKIE_NAME, token, new CookieOptions
         {
-            HttpOnly = false,
+            HttpOnly = true,
             Secure = false, // Только HTTPS (в проде)
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddMinutes(60)
         });
 
-        return RedirectToPage("/Index");
+        return RedirectToPage(Routes.Pages.Index);
     }
 }

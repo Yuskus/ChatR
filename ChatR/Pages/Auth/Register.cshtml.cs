@@ -1,3 +1,4 @@
+using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -62,7 +63,7 @@ public class RegisterModel : PageModel
             }
 
             TempData["SuccessMessage"] = "Registration successful. Log in.";
-            return RedirectToPage("/Auth/Login");
+            return RedirectToPage(Routes.Pages.Auth.Login);
         }
         catch (ArgumentException ex)
         {
