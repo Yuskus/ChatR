@@ -34,7 +34,7 @@ public class LoginModel : PageModel
     {
         if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
         {
-            ErrorMessage = "Email и пароль об€зательны";
+            ErrorMessage = "Email and password are required";
             return Page();
         }
 
@@ -42,7 +42,7 @@ public class LoginModel : PageModel
 
         if (token == null)
         {
-            ErrorMessage = "Ќеверный email или пароль";
+            ErrorMessage = "Incorrect email or password";
             return Page();
         }
 

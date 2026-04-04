@@ -110,11 +110,7 @@ builder.Services.AddSignalR(options =>
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler(Routes.Pages.Error);
-    app.UseHsts();
-}
+app.UseHsts();
 
 using (var scope = app.Services.CreateScope())
 {
