@@ -16,6 +16,8 @@ services:
       - chatr_db
     networks:
       - chatr-network
+    volumes:
+      - chatr-keys:/app/keys
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNET_CONFIGURATION}
       - ASPNETCORE_HTTP_PORTS=8080
@@ -42,6 +44,7 @@ services:
 
 volumes:
   chatr_db:
+  chatr-keys:
   
 networks:
   chatr-network:

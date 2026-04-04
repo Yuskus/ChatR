@@ -37,6 +37,10 @@ ARG DOCKER_GID
 RUN addgroup -g ${DOCKER_GID} -S ${DOCKER_USER_APP} \
     && adduser -u ${DOCKER_UID} -S -G ${DOCKER_USER_APP} -s /bin/bash ${DOCKER_USER_APP}
 
+RUN mkdir -p /app/keys \
+    && chown -R ${DOCKER_UID}:${DOCKER_GID} /app/keys \
+    && chmod -R 700 /app/keys
+
 USER ${DOCKER_USER_APP}
 
 ENTRYPOINT ["./ChatR"]
