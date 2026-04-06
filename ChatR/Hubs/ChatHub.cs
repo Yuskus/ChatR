@@ -2,66 +2,56 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace ChatR.Hubs
+namespace ChatR.Hubs;
+
+[Authorize]
+public class ChatHub(
+    MessageService messageService) : Hub
 {
-    [Authorize]
-    public class ChatHub : Hub
+    private readonly MessageService _messageService = messageService;
+
+    public async Task JoinGroup(string groupName)
     {
-        private readonly MessageService _messageService;
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+    }
 
-        public ChatHub(
-            MessageService messageService)
+    public async Task LeaveGroup(string groupName)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+    }
+
+    public async Task SendMessage(string content, int userId, int roomId)
+    {
+        var message = await _messageService.Add(content, userId, roomId);
+
+        if (message != null)
         {
-            _messageService = messageService;
+            await Clients.Group($"chat_{roomId}").SendAsync("ReceiveMessage",
+                message.Id,
+                message.Content,
+                message.UserId,
+                message.Author,
+                message.Timestamp);
         }
+    }
 
-        public async Task JoinGroup(string groupName)
+    public async Task DeleteMessage(int messageId, int userId)
+    {
+        var message = await _messageService.Delete(messageId, userId);
+
+        if (message != null)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+            await Clients.Group($"chat_{message.RoomId}").SendAsync("MessageDeleted", messageId);
         }
+    }
 
-        public async Task LeaveGroup(string groupName)
+    public async Task UpdateMessage(int messageId, string content, int userId)
+    {
+        var message = await _messageService.Update(messageId, content, userId);
+
+        if (message != null)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-        }
-
-        public async Task SendMessage(string content, int userId, int roomId)
-        {
-            var message = await _messageService.Add(content, userId, roomId);
-
-            if (message != null)
-            {
-                var fullname = message.User != null
-                    ? $"{message.User.FirstName} {message.User.LastName}"
-                    : "Unknown Unknown";
-
-                await Clients.Group($"chat_{roomId}").SendAsync("ReceiveMessage",
-                    message.Id,
-                    message.Content,
-                    message.UserId,
-                    fullname,
-                    message.Timestamp);
-            }
-        }
-
-        public async Task DeleteMessage(int messageId, int userId)
-        {
-            var message = await _messageService.Delete(messageId, userId);
-
-            if (message != null)
-            {
-                await Clients.Group($"chat_{message.RoomId}").SendAsync("MessageDeleted", messageId);
-            }
-        }
-
-        public async Task UpdateMessage(int messageId, string content, int userId)
-        {
-            var message = await _messageService.Update(messageId, content, userId);
-
-            if (message != null)
-            {
-                await Clients.Group($"chat_{message.RoomId}").SendAsync("MessageUpdated", messageId, content);
-            }
+            await Clients.Group($"chat_{message.RoomId}").SendAsync("MessageUpdated", messageId, content);
         }
     }
 }

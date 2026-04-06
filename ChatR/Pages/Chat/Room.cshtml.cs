@@ -7,30 +7,22 @@ using System.Security.Claims;
 
 namespace ChatR.Pages.Chat;
 
-public class RoomModel : PageModel
+public class RoomModel(
+    MessageService messageService,
+    UserService userService,
+    RoomService roomService,
+    UserInRoomService userInRoomService) : PageModel
 {
-    private readonly MessageService _messageService;
-    private readonly UserService _userService;
-    private readonly RoomService _roomService;
-    private readonly UserInRoomService _userInRoomService;
+    private readonly MessageService _messageService = messageService;
+    private readonly UserService _userService = userService;
+    private readonly RoomService _roomService = roomService;
+    private readonly UserInRoomService _userInRoomService = userInRoomService;
 
     public int RoomId { get; set; }
     public string RoomName { get; set; } = "";
     public int CurrentUserId { get; set; }
     public string CurrentUserEmail { get; set; } = "";
     public List<Message> Messages { get; set; } = [];
-
-    public RoomModel(
-        MessageService messageService,
-        UserService userService,
-        RoomService roomService,
-        UserInRoomService userInRoomService)
-    {
-        _messageService = messageService;
-        _userService = userService;
-        _roomService = roomService;
-        _userInRoomService = userInRoomService;
-    }
 
     public async Task<IActionResult> OnGetAsync(int roomId)
     {

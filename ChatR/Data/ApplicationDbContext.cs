@@ -1,7 +1,8 @@
-﻿namespace ChatR.Data;
-
-using ChatR.Models;
+﻿using ChatR.Models;
+using ChatR.Models.Constatns;
 using Microsoft.EntityFrameworkCore;
+
+namespace ChatR.Data;
 
 public class ApplicationDbContext : DbContext
 {
@@ -17,7 +18,14 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // message
+        AddMessages(modelBuilder);
+        AddUsers(modelBuilder);
+        AddRooms(modelBuilder);
+        AddUsersInRoom(modelBuilder);
+    }
+
+    private static void AddMessages(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<Message>(message =>
         {
             message.ToTable("messages");
@@ -27,6 +35,7 @@ public class ApplicationDbContext : DbContext
                 .IsRequired();
             message
                 .Property(p => p.Timestamp)
+                .HasDefaultValueSql(Sql.NOW)
                 .IsRequired();
 
             message
@@ -35,8 +44,10 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
+    }
 
-        // user
+    private static void AddUsers(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<User>(user =>
         {
             user.ToTable("users");
@@ -45,7 +56,7 @@ public class ApplicationDbContext : DbContext
 
             user
                 .Property(p => p.CreatedAt)
-                .HasDefaultValueSql("now()")
+                .HasDefaultValueSql(Sql.NOW)
                 .IsRequired();
             user
                 .Property(x => x.LastLogin);
@@ -68,15 +79,17 @@ public class ApplicationDbContext : DbContext
                 .HasDefaultValue(UserRole.User)
                 .IsRequired();
         });
+    }
 
-        // room
+    private static void AddRooms(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<Room>(room =>
         {
             room.ToTable("rooms");
 
             room
                 .Property(p => p.CreatedAt)
-                .HasDefaultValueSql("now()")
+                .HasDefaultValueSql(Sql.NOW)
                 .IsRequired();
             room
                 .Property(x => x.IsClosed)
@@ -88,8 +101,10 @@ public class ApplicationDbContext : DbContext
                 .Property(p => p.Name)
                 .IsRequired();
         });
+    }
 
-        // user in room
+    private static void AddUsersInRoom(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<UserInRoom>(usersInRoom =>
         {
             usersInRoom.ToTable("userInRoom");
@@ -98,7 +113,7 @@ public class ApplicationDbContext : DbContext
 
             usersInRoom
                 .Property(p => p.CreatedAt)
-                .HasDefaultValueSql("now()")
+                .HasDefaultValueSql(Sql.NOW)
                 .IsRequired();
             usersInRoom
                 .Property(p => p.RoomRole)

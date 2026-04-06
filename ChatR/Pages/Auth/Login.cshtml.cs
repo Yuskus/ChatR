@@ -1,3 +1,4 @@
+using ChatR.Models.Constatns;
 using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -7,14 +8,9 @@ using AuthConst = ChatR.Models.Constatns.Auth;
 namespace ChatR.Pages.Auth;
 
 [ValidateAntiForgeryToken]
-public class LoginModel : PageModel
+public class LoginModel(AuthService authService) : PageModel
 {
-    private readonly AuthService _authService;
-
-    public LoginModel(AuthService authService)
-    {
-        _authService = authService;
-    }
+    private readonly AuthService _authService = authService;
 
     [BindProperty]
     public string Email { get; set; } = "";
@@ -27,7 +23,7 @@ public class LoginModel : PageModel
     public void OnGet()
     {
         // Очистка после выхода
-        TempData["ErrorMessage"] = null;
+        TempData[Messages.ERROR] = null;
     }
 
     public async Task<IActionResult> OnPostAsync()

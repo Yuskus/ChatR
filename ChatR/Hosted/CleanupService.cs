@@ -2,16 +2,11 @@
 
 namespace ChatR.Hosted;
 
-public sealed class CleanupService : IHostedService, IDisposable
+public sealed class CleanupService(
+    IServiceProvider serviceProvider) : IHostedService, IDisposable
 {
     private Timer? _timer;
-    private readonly IServiceProvider _serviceProvider;
-
-    public CleanupService(
-        IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {

@@ -1,3 +1,4 @@
+using ChatR.Models.Constatns;
 using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -7,14 +8,9 @@ using AuthConst = ChatR.Models.Constatns.Auth;
 
 namespace ChatR.Pages.Users;
 
-public class ProfileModel : PageModel
+public class ProfileModel(UserService userService) : PageModel
 {
-    private readonly UserService _userService;
-
-    public ProfileModel(UserService userService)
-    {
-        _userService = userService;
-    }
+    private readonly UserService _userService = userService;
 
     [BindProperty]
     public string FirstName { get; set; } = "";
@@ -74,7 +70,7 @@ public class ProfileModel : PageModel
             if (!string.IsNullOrWhiteSpace(Password) &&
                 Password.Length < 6)
             {
-                TempData["ErrorMessage"] = "Incorrect password";
+                TempData[Messages.ERROR] = "Incorrect password";
                 return Page();
             }
 
@@ -87,21 +83,21 @@ public class ProfileModel : PageModel
 
             if (updatedUser == null)
             {
-                TempData["ErrorMessage"] = "Error while updating user";
+                TempData[Messages.ERROR] = "Error while updating user";
                 return Page();
             }
 
-            TempData["SuccessMessage"] = "Data updated successfully";
+            TempData[Messages.SUCCESS] = "Data updated successfully";
             return RedirectToPage();
         }
         catch (ArgumentException ex)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            TempData[Messages.ERROR] = ex.Message;
             return Page();
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Error while saving: " + ex.Message;
+            TempData[Messages.ERROR] = "Error while saving: " + ex.Message;
             return Page();
         }
     }
@@ -130,7 +126,7 @@ public class ProfileModel : PageModel
         }
         catch (Exception)
         {
-            TempData["ErrorMessage"] = "Failed to delete account";
+            TempData[Messages.ERROR] = "Failed to delete account";
             return RedirectToPage();
         }
     }

@@ -1,4 +1,5 @@
 ﻿@page
+@using ChatR.Models.Constatns
 @model ChatR.Pages.IndexModel
 @{
     ViewData["Title"] = "Ваши комнаты";
@@ -7,13 +8,13 @@
 <div class="container mt-4">
     <h3>Добро пожаловать, @Model.CurrentUserEmail!</h3>
 
-    @if (TempData["SuccessMessage"] != null)
+    @if (TempData[Messages.SUCCESS] != null)
     {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        <div class="alert alert-success">@TempData[Messages.SUCCESS]</div>
     }
-    @if (TempData["ErrorMessage"] != null)
+    @if (TempData[Messages.ERROR] != null)
     {
-        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        <div class="alert alert-danger">@TempData[Messages.ERROR]</div>
     }
 
     <!-- Форма создания комнаты -->

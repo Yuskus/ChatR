@@ -3,7 +3,6 @@ using ChatR.Hosted;
 using ChatR.Hubs;
 using ChatR.Models.Constatns;
 using ChatR.Models.Settings;
-using ChatR.Models.Structure;
 using ChatR.Repos;
 using ChatR.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

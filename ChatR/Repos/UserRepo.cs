@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChatR.Repos;
 
-public class UserRepo
+public class UserRepo(ApplicationDbContext context)
 {
-    private readonly ApplicationDbContext _context;
-
-    public UserRepo(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     public async Task<User?> GetById(int id)
     {

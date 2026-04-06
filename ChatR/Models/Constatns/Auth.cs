@@ -1,7 +1,6 @@
-﻿namespace ChatR.Models.Constatns
+﻿namespace ChatR.Models.Constatns;
+
+public static class Auth
 {
-    public static class Auth
-    {
-        public const string TOKEN_COOKIE_NAME = "auth_token";
-    }
+    public const string TOKEN_COOKIE_NAME = "auth_token";
 }

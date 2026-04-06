@@ -1,22 +1,19 @@
-﻿using ChatR.Models;
+﻿using ChatR.Helpers;
+using ChatR.Models;
+using ChatR.Models.Constatns;
 using ChatR.Repos;
 using BCryptNet = BCrypt.Net.BCrypt;
 
 namespace ChatR.Services;
 
-public class UserService
+public class UserService(UserRepo userRepo)
 {
-    private readonly UserRepo _userRepo;
-
-    public UserService(UserRepo userRepo)
-    {
-        _userRepo = userRepo;
-    }
+    private readonly UserRepo _userRepo = userRepo;
 
     public async Task<User?> GetById(int id)
     {
         if (id <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(id));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(id));
 
         return await _userRepo.GetById(id);
     }
@@ -27,7 +24,7 @@ public class UserService
             throw new ArgumentException("Email не может быть пустым", nameof(email));
 
         var trimmedEmail = email.Trim().ToLower();
-        if (!IsValidEmail(trimmedEmail))
+        if (!Validation.IsValidEmail(trimmedEmail))
             throw new ArgumentException("Некорректный формат email", nameof(email));
 
         return await _userRepo.GetByEmail(trimmedEmail);
@@ -58,7 +55,7 @@ public class UserService
     public async Task Delete(int id)
     {
         if (id <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(id));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(id));
 
         await _userRepo.Delete(id);
     }
@@ -72,19 +69,6 @@ public class UserService
         catch (Exception ex)
         {
             Console.WriteLine($"[UserService] Ошибка при удалении пользователей: {ex.Message}");
-        }
-    }
-
-    private static bool IsValidEmail(string email)
-    {
-        try
-        {
-            var addr = new System.Net.Mail.MailAddress(email);
-            return addr.Address == email;
-        }
-        catch
-        {
-            return false;
         }
     }
 }

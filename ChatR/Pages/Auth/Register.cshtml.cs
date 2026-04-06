@@ -1,3 +1,4 @@
+using ChatR.Models.Constatns;
 using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -6,14 +7,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace ChatR.Pages.Auth;
 
 [ValidateAntiForgeryToken]
-public class RegisterModel : PageModel
+public class RegisterModel(AuthService authService) : PageModel
 {
-    private readonly AuthService _authService;
-
-    public RegisterModel(AuthService authService)
-    {
-        _authService = authService;
-    }
+    private readonly AuthService _authService = authService;
 
     [BindProperty]
     public string Email { get; set; } = "";
@@ -37,6 +33,7 @@ public class RegisterModel : PageModel
 
     public void OnGet()
     {
+        // Method intentionally left empty.
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -62,7 +59,7 @@ public class RegisterModel : PageModel
                 return Page();
             }
 
-            TempData["SuccessMessage"] = "Registration successful. Log in.";
+            TempData[Messages.SUCCESS] = "Registration successful. Log in.";
             return RedirectToPage(Routes.Pages.Auth.Login);
         }
         catch (ArgumentException ex)

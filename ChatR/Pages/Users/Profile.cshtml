@@ -1,4 +1,5 @@
 ﻿@page
+@using ChatR.Models.Constatns
 @using ChatR.Models.Structure
 @model ChatR.Pages.Users.ProfileModel
 @{
@@ -8,13 +9,13 @@
 <div class="container mt-4" style="max-width: 600px;">
     <h4>Ваш профиль</h4>
 
-    @if (TempData["SuccessMessage"] != null)
+    @if (TempData[Messages.SUCCESS] != null)
     {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        <div class="alert alert-success">@TempData[Messages.SUCCESS]</div>
     }
-    @if (TempData["ErrorMessage"] != null)
+    @if (TempData[Messages.ERROR] != null)
     {
-        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        <div class="alert alert-danger">@TempData[Messages.ERROR]</div>
     }
 
     <form method="post">

@@ -1,31 +1,25 @@
 ﻿using ChatR.Models;
+using ChatR.Models.Constatns;
 using ChatR.Repos;
 
 namespace ChatR.Services;
 
-public class UserInRoomService
+public class UserInRoomService(
+    UserInRoomRepo userInRoomRepo,
+    UserRepo userRepo,
+    RoomRepo roomRepo)
 {
-    private readonly UserInRoomRepo _userInRoomRepo;
-    private readonly UserRepo _userRepo;
-    private readonly RoomRepo _roomRepo;
-
-    public UserInRoomService(
-        UserInRoomRepo userInRoomRepo,
-        UserRepo userRepo,
-        RoomRepo roomRepo)
-    {
-        _userInRoomRepo = userInRoomRepo;
-        _userRepo = userRepo;
-        _roomRepo = roomRepo;
-    }
+    private readonly UserInRoomRepo _userInRoomRepo = userInRoomRepo;
+    private readonly UserRepo _userRepo = userRepo;
+    private readonly RoomRepo _roomRepo = roomRepo;
 
     public async Task Add(int userId, int roomId, RoomRole role = RoomRole.Member)
     {
         if (userId <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(userId));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(userId));
 
         if (roomId <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(roomId));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(roomId));
 
         var userExists = await _userRepo.GetById(userId) != null;
         if (!userExists)
@@ -51,10 +45,10 @@ public class UserInRoomService
     public async Task Delete(int userId, int roomId)
     {
         if (userId <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(userId));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(userId));
 
         if (roomId <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(roomId));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(roomId));
 
         await _userInRoomRepo.Delete(userId, roomId);
     }
@@ -62,7 +56,7 @@ public class UserInRoomService
     public async Task<List<UserInRoom>> GetByRoomId(int roomId)
     {
         if (roomId <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(roomId));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(roomId));
 
         return await _userInRoomRepo.GetByRoomId(roomId);
     }
@@ -70,7 +64,7 @@ public class UserInRoomService
     public async Task<List<UserInRoom>> GetByUserId(int userId)
     {
         if (userId <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(userId));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(userId));
 
         return await _userInRoomRepo.GetByUserId(userId);
     }
@@ -78,10 +72,10 @@ public class UserInRoomService
     public async Task<UserInRoom?> GetByUserAndRoom(int userId, int roomId)
     {
         if (userId <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(userId));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(userId));
 
         if (roomId <= 0)
-            throw new ArgumentException("ID должно быть положительным числом", nameof(roomId));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(roomId));
 
         return await _userInRoomRepo.GetByUserAndRoom(userId, roomId);
     }

@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChatR.Repos;
 
-public class RoomRepo
+public class RoomRepo(ApplicationDbContext context)
 {
-    private readonly ApplicationDbContext _context;
-
-    public RoomRepo(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     public async Task<Room?> GetById(int id)
     {

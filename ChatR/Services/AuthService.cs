@@ -7,20 +7,15 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using BCryptNet = BCrypt.Net.BCrypt;
+using ChatR.Helpers;
 
 namespace ChatR.Services;
 
-public class AuthService
+public class AuthService(
+    UserRepo userRepo)
 {
-    private readonly UserRepo _userRepo;
-    private readonly JwtSettings _jwtSettings;
-
-    public AuthService(
-        UserRepo userRepo)
-    {
-        _userRepo = userRepo;
-        _jwtSettings = new JwtSettings();
-    }
+    private readonly UserRepo _userRepo = userRepo;
+    private readonly JwtSettings _jwtSettings = new();
 
     public async Task<bool> Register(
         string email,
@@ -33,7 +28,7 @@ public class AuthService
         if (string.IsNullOrWhiteSpace(email))
             throw new ArgumentException("Email обязателен", nameof(email));
         email = email.Trim().ToLower();
-        if (!IsValidEmail(email))
+        if (!Validation.IsValidEmail(email))
             throw new ArgumentException("Некорректный формат email", nameof(email));
 
         // Валидация пароля
@@ -121,18 +116,5 @@ public class AuthService
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private static bool IsValidEmail(string email)
-    {
-        try
-        {
-            var addr = new System.Net.Mail.MailAddress(email);
-            return addr.Address == email;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

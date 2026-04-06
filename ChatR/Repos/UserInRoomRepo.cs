@@ -4,14 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChatR.Repos;
 
-public class UserInRoomRepo
+public class UserInRoomRepo(ApplicationDbContext context)
 {
-    private readonly ApplicationDbContext _context;
-
-    public UserInRoomRepo(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly ApplicationDbContext _context = context;
 
     public async Task Add(UserInRoom userInRoom)
     {

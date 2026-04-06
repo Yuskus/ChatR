@@ -1,4 +1,5 @@
 ﻿using ChatR.Models;
+using ChatR.Models.Constatns;
 using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -8,11 +9,14 @@ using System.Security.Claims;
 namespace ChatR.Pages;
 
 [ValidateAntiForgeryToken]
-public class IndexModel : PageModel
+public class IndexModel(
+    RoomService roomService,
+    UserInRoomService userInRoomService,
+    UserService userService) : PageModel
 {
-    private readonly RoomService _roomService;
-    private readonly UserInRoomService _userInRoomService;
-    private readonly UserService _userService;
+    private readonly RoomService _roomService = roomService;
+    private readonly UserInRoomService _userInRoomService = userInRoomService;
+    private readonly UserService _userService = userService;
 
     public List<Room> UserRooms { get; set; } = [];
     public string CurrentUserEmail { get; set; } = "";
@@ -28,16 +32,6 @@ public class IndexModel : PageModel
     public User? FoundUser { get; set; }
     public string? FoundUserError { get; set; }
 
-    public IndexModel(
-        RoomService roomService,
-        UserInRoomService userInRoomService,
-        UserService userService)
-    {
-        _roomService = roomService;
-        _userInRoomService = userInRoomService;
-        _userService = userService;
-    }
-
     public async Task<IActionResult> OnGetAsync()
     {
         return await LoadRoomsAsync();
@@ -47,7 +41,7 @@ public class IndexModel : PageModel
     {
         if (string.IsNullOrWhiteSpace(NewRoomName))
         {
-            TempData["ErrorMessage"] = "Room name is required";
+            TempData[Messages.ERROR] = "Room name is required";
             return await LoadRoomsAsync();
         }
 
@@ -56,11 +50,11 @@ public class IndexModel : PageModel
             var room = await _roomService.Add(NewRoomName);
             if (room == null)
             {
-                TempData["ErrorMessage"] = "Failed to create room";
+                TempData[Messages.ERROR] = "Failed to create room";
                 return await LoadRoomsAsync();
             }
 
-            TempData["SuccessMessage"] = "The room is created";
+            TempData[Messages.SUCCESS] = "The room is created";
 
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
             var user = await _userService.GetByEmail(email!);
@@ -71,11 +65,11 @@ public class IndexModel : PageModel
         }
         catch (ArgumentException ex)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            TempData[Messages.ERROR] = ex.Message;
         }
         catch (Exception)
         {
-            TempData["ErrorMessage"] = "Failed to create room";
+            TempData[Messages.ERROR] = "Failed to create room";
         }
 
         return await LoadRoomsAsync();
@@ -93,7 +87,7 @@ public class IndexModel : PageModel
         }
         catch (Exception)
         {
-            TempData["ErrorMessage"] = "Failed to join the room";
+            TempData[Messages.ERROR] = "Failed to join the room";
             return await LoadRoomsAsync();
         }
     }
@@ -103,11 +97,11 @@ public class IndexModel : PageModel
         try
         {
             await _roomService.Delete(roomId);
-            TempData["SuccessMessage"] = "The room has been deleted.";
+            TempData[Messages.SUCCESS] = "The room has been deleted.";
         }
         catch (Exception)
         {
-            TempData["ErrorMessage"] = "Failed to delete room";
+            TempData[Messages.ERROR] = "Failed to delete room";
         }
 
         return await LoadRoomsAsync();
@@ -129,19 +123,20 @@ public class IndexModel : PageModel
         var room = await _roomService.GetById(roomId);
         if (room == null)
         {
-            TempData["ErrorMessage"] = "Room not found";
+            TempData[Messages.ERROR] = "Room not found";
             return await LoadRoomsAsync();
         }
 
         var membership = await _userInRoomService.GetByUserAndRoom(admin.Id, roomId);
         if (membership?.RoomRole != RoomRole.Admin)
         {
-            TempData["ErrorMessage"] = "Only the administrator can add members";
+            TempData[Messages.ERROR] = "Only the administrator can add members";
             return await LoadRoomsAsync();
         }
 
         // Поиск пользователя
-        User? foundUser = null;
+        User? foundUser;
+
         if (int.TryParse(userIdentifier, out var userId))
         {
             foundUser = await _userService.GetById(userId);
@@ -162,7 +157,7 @@ public class IndexModel : PageModel
         var existing = await _userInRoomService.GetByUserAndRoom(foundUser.Id, roomId);
         if (existing != null)
         {
-            TempData["ErrorMessage"] = "The user is already in the room";
+            TempData[Messages.ERROR] = "The user is already in the room";
             return await LoadRoomsAsync();
         }
 
@@ -170,11 +165,11 @@ public class IndexModel : PageModel
         try
         {
             await _userInRoomService.Add(foundUser.Id, roomId, RoomRole.Member);
-            TempData["SuccessMessage"] = $"User {foundUser.Email} has been added to the room";
+            TempData[Messages.SUCCESS] = $"User {foundUser.Email} has been added to the room";
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Error while adding: " + ex.Message;
+            TempData[Messages.ERROR] = "Error while adding: " + ex.Message;
         }
 
         return await LoadRoomsAsync();
@@ -211,7 +206,7 @@ public class IndexModel : PageModel
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Error loading rooms";
+            TempData[Messages.ERROR] = "Error loading rooms";
             Console.WriteLine(ex.Message);
         }
 

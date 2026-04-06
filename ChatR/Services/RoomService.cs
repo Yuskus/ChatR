@@ -1,21 +1,17 @@
 ﻿using ChatR.Models;
+using ChatR.Models.Constatns;
 using ChatR.Repos;
 
 namespace ChatR.Services;
 
-public class RoomService
+public class RoomService(RoomRepo roomRepo)
 {
-    private readonly RoomRepo _roomRepo;
-
-    public RoomService(RoomRepo roomRepo)
-    {
-        _roomRepo = roomRepo;
-    }
+    private readonly RoomRepo _roomRepo = roomRepo;
 
     public async Task<Room?> GetById(int id)
     {
         if (id <= 0)
-            throw new ArgumentException("ID комнаты должно быть положительным числом", nameof(id));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(id));
 
         return await _roomRepo.GetById(id);
     }
@@ -46,13 +42,12 @@ public class RoomService
     public async Task Delete(int id)
     {
         if (id <= 0)
-            throw new ArgumentException("ID комнаты должно быть положительным числом", nameof(id));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(id));
 
-        var room = await _roomRepo.GetById(id);
-        if (room == null)
-            throw new ArgumentException($"Комната с ID {id} не найдена", nameof(id));
+        var room = await _roomRepo.GetById(id)
+            ?? throw new ArgumentException($"Комната с ID {id} не найдена", nameof(id));
 
-        await _roomRepo.Delete(id);
+        await _roomRepo.Delete(room.Id);
     }
 
     public async Task DeleteInactiveRooms(DateTime olderThan)
@@ -70,12 +65,10 @@ public class RoomService
     public async Task Close(int id)
     {
         if (id <= 0)
-            throw new ArgumentException("ID комнаты должно быть положительным числом", nameof(id));
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(id));
 
-        var room = await _roomRepo.GetById(id);
-        if (room == null)
-            throw new ArgumentException($"Комната с ID {id} не найдена", nameof(id));
-
+        var room = await _roomRepo.GetById(id)
+            ?? throw new ArgumentException($"Комната с ID {id} не найдена", nameof(id));
         if (room.IsClosed)
             return;
 
