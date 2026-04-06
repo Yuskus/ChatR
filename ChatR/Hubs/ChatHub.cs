@@ -27,7 +27,6 @@ namespace ChatR.Hubs
 
         public async Task SendMessage(string content, int userId, int roomId)
         {
-            Console.WriteLine("1 - " + Context.User?.Identity?.IsAuthenticated.ToString());
             var message = await _messageService.Add(content, userId, roomId);
 
             if (message != null)
