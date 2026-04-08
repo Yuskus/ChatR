@@ -9,13 +9,18 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using NetEscapades.AspNetCore.SecurityHeaders;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // http
 builder.Services.AddControllers();
+
+builder.Services.AddHsts(options =>
+{
+    options.ExcludedHosts.Clear();
+    options.IncludeSubDomains = true;
+});
 
 builder.Services.AddAntiforgery(options =>
 {
@@ -110,7 +115,16 @@ builder.Services.AddSignalR(options =>
 
 var app = builder.Build();
 
+app.UseHttpsRedirection();
 app.UseHsts();
+
+app.UseSecurityHeaders(policies =>
+    policies
+        .AddDefaultSecurityHeaders()
+        .AddPermissionsPolicyWithDefaultSecureDirectives());
+
+app.UseRouting();
+app.UseCors("AllowAll");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -118,19 +132,6 @@ using (var scope = app.Services.CreateScope())
 
     await context.Database.MigrateAsync();
 }
-
-app.UseHttpsRedirection();
-
-app.UseRouting();
-
-app.UseCors("AllowAll");
-
-app.Use(async (context, next) =>
-{
-    app.UseSecurityHeaders();
-
-    await next.Invoke();
-});
 
 app.UseAuthentication();
 app.UseAuthorization();
