@@ -124,6 +124,13 @@ app.UseRouting();
 
 app.UseCors("AllowAll");
 
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("Referrer-Policy", "origin");
+
+    await next.Invoke();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
