@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NetEscapades.AspNetCore.SecurityHeaders;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -126,7 +127,7 @@ app.UseCors("AllowAll");
 
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Append("Referrer-Policy", "origin");
+    app.UseSecurityHeaders();
 
     await next.Invoke();
 });
