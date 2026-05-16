@@ -60,7 +60,7 @@
                     <li class="list-group-item border-0" data-message-id="@msg.Id">
                         <strong>@msg.User?.FirstName @msg.User?.LastName</strong>
                         <small class="text-muted">[@msg.Timestamp.ToString("HH:mm")]</small>
-                        <div>@msg.Content</div>
+                        <div>@Html.Raw(msg.Content.Replace("\n", "<br>"))</div>
 
                         @if (msg.UserId == Model.CurrentUserId)
                         {
@@ -81,18 +81,30 @@
 
     <!-- Форма отправки -->
     <div class="input-group mb-3">
-        <input type="text"
-               id="messageInput"
-               class="form-control"
-               placeholder="Введите сообщение..."
-               maxlength="5000" />
-        <button id="sendButton" class="btn btn-primary">Отправить</button>
+        <textarea id="messageInput"
+                class="form-control"
+                placeholder="Введите сообщение..."
+                maxlength="5000"
+                rows="1"
+                data-min-rows="1"
+                data-max-rows="3"
+                style="resize: none; overflow: hidden; height: calc(1.5em + 0.75rem);"></textarea>
+        <button id="sendButton"
+                class="btn btn-primary"
+                title="Нажмите и удерживайте, чтобы выбрать способ отправки"
+                disabled>Отправить</button>
     </div>
 
     <!-- Редактирование -->
     <div id="editForm" class="input-group mb-3 d-none">
         <input type="hidden" id="editMessageId" />
-        <input type="text" id="editMessageInput" class="form-control" maxlength="5000" />
+        <textarea id="editMessageInput"
+                class="form-control"
+                maxlength="5000"
+                rows="1"
+                data-min-rows="1"
+                data-max-rows="3"
+                style="resize: none; overflow: hidden; height: calc(1.5em + 0.75rem);"></textarea>
         <button id="saveEditButton" class="btn btn-success">Сохранить</button>
         <button id="cancelEditButton" class="btn btn-secondary">Отмена</button>
     </div>
@@ -102,6 +114,162 @@
 {
     <script src="~/lib/signalr/signalr.min.js"></script>
     <script>
+        // Функция для настройки высоты textarea
+        function setupTextareaHeight(textarea) {
+            const minRows = parseInt(textarea.getAttribute('data-min-rows'), 10) || 1;
+            const maxRows = parseInt(textarea.getAttribute('data-max-rows'), 10) || 3;
+
+            // Временно сбрасываем высоту, чтобы корректно измерить scrollHeight
+            textarea.style.height = 'auto';
+            textarea.style.overflowY = 'hidden';
+
+            const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight);
+            const singleRowHeight = lineHeight || 20; // fallback в пикселях
+
+            const paddingTop = parseFloat(getComputedStyle(textarea).paddingTop);
+            const paddingBottom = parseFloat(getComputedStyle(textarea).paddingBottom);
+            const totalPadding = paddingTop + paddingBottom;
+
+            const fullHeight = textarea.scrollHeight;
+
+            // Вычисляем высоту только по строкам
+            const numberOfLines = textarea.value ? textarea.value.split('\n').length : 1;
+            const desiredHeight = singleRowHeight * Math.min(maxRows, Math.max(minRows, numberOfLines)) + totalPadding;
+
+            if (numberOfLines > maxRows) {
+                textarea.style.height = `${singleRowHeight * maxRows + totalPadding}px`;
+                textarea.style.overflowY = 'auto'; // Показать скролл, если больше 3 строк
+            } else {
+                textarea.style.height = `${desiredHeight}px`;
+                textarea.style.overflowY = 'hidden';
+            }
+        }
+
+        // Инициализация высоты textarea при загрузке
+        const messageInput = document.getElementById("messageInput");
+        const editMessageInput = document.getElementById("editMessageInput");
+        const sendButton = document.getElementById("sendButton");
+
+        setupTextareaHeight(messageInput);
+        setupTextareaHeight(editMessageInput);
+
+        sendButton.disabled = messageInput.value.trim() === '';
+
+        // Обновление высоты при изменении содержимого
+        messageInput.addEventListener('input', function() {
+            setupTextareaHeight(this);
+            sendButton.disabled = this.value.trim() === '';
+        });
+
+        editMessageInput.addEventListener('input', function() {
+            setupTextareaHeight(this);
+        });
+
+        // Функция для отправки сообщения
+        async function sendMessage() {
+            const content = messageInput.value.trim();
+            if (!content) return;
+
+            try {
+                await connection.invoke("SendMessage", content, currentUserId, roomId);
+                messageInput.value = '';
+                setupTextareaHeight(messageInput);
+            } catch (err) {
+                console.error("Ошибка отправки:", err);
+                alert("Не удалось отправить сообщение");
+            }
+        }
+
+        // Функция для сохранения редактирования
+        async function saveEdit() {
+            const idInput = document.getElementById("editMessageId").value;
+            const content = editMessageInput.value.trim();
+            if (!content) return;
+
+            // Преобразуем в число
+            const id = parseInt(idInput, 10);
+            if (isNaN(id)) {
+                console.error("Некорректный ID сообщения:", idInput);
+                return;
+            }
+
+            try {
+                await connection.invoke("UpdateMessage", id, content, currentUserId);
+                exitEditMode();
+            } catch (err) {
+                console.error("Ошибка редактирования:", err);
+            }
+        }
+
+        // Получение настройки отправки из localStorage
+        function getSendOnEnter() {
+            const setting = localStorage.getItem('sendOnEnter');
+            return setting === null ? true : setting === 'true'; // По умолчанию true (Enter)
+        }
+
+        // Сохранение настройки отправки в localStorage
+        function setSendOnEnter(value) {
+            localStorage.setItem('sendOnEnter', value);
+        }
+
+        // Обработчик нажатия клавиш для отправки сообщения
+        messageInput.addEventListener('keydown', function(e) {
+            const sendOnEnter = getSendOnEnter();
+            
+            // Проверяем, нажата ли Enter и не нажата ли Ctrl
+            const isEnter = e.key === 'Enter';
+            const isCtrlEnter = e.key === 'Enter' && e.ctrlKey;
+            
+            if ((sendOnEnter && isEnter && !e.shiftKey) || (!sendOnEnter && isCtrlEnter)) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Обработчик нажатия клавиш для сохранения редактирования
+        editMessageInput.addEventListener('keydown', function(e) {
+            const sendOnEnter = getSendOnEnter();
+            
+            // Проверяем, нажата ли Enter и не нажата ли Ctrl
+            const isEnter = e.key === 'Enter';
+            const isCtrlEnter = e.key === 'Enter' && e.ctrlKey;
+            
+            if ((sendOnEnter && isEnter && !e.shiftKey) || (!sendOnEnter && isCtrlEnter)) {
+                e.preventDefault();
+                saveEdit();
+            }
+        });
+
+        // Добавление обработчиков для кнопки отправки при долгом нажатии
+        let pressTimer;
+        
+        sendButton.addEventListener('mousedown', function(e) {
+            if (e.button === 0) { // Левая кнопка мыши
+                pressTimer = setTimeout(function() {
+                    showSendOptionMenu();
+                }, 500); // Показываем меню после 500мс удержания
+            }
+        });
+        
+        sendButton.addEventListener('mouseup', function(e) {
+            clearTimeout(pressTimer);
+        });
+        
+        sendButton.addEventListener('mouseleave', function() {
+            clearTimeout(pressTimer);
+        });
+        
+        // Функция для отображения меню выбора способа отправки
+        function showSendOptionMenu() {
+            const sendOnEnter = getSendOnEnter();
+            const option = confirm(`Текущая настройка: ${sendOnEnter ? 'Enter' : 'Ctrl+Enter'}\n\nВыберите способ отправки сообщения:\n\nOK - Отправлять по Enter\nОтмена - Отправлять по Ctrl+Enter`);
+            
+            setSendOnEnter(option);
+            alert(`Способ отправки сообщений изменён на: ${option ? 'Enter' : 'Ctrl+Enter'}`);
+        }
+
+        // Удаляем дублирующий обработчик, так как он уже добавлен ниже
+        // Обработчики отправки и редактирования остаются только внизу файла
         const container = document.getElementById("messagesList");
         const currentUserId = parseInt(container.dataset.currentUserId);
         const roomId = parseInt(container.dataset.roomId);
@@ -121,6 +289,11 @@
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
+        // Функция для преобразования текста с переносами строк в HTML
+        function nl2br(text) {
+            return text.replace(/\n/g, '<br>');
+        }
+
         // Создание элемента сообщения
         function createMessageElement(msg) {
             const li = document.createElement("li");
@@ -136,7 +309,7 @@
 
             let content = `<strong>${escapeHtml(msg.user?.firstName || '')} ${escapeHtml(msg.user?.lastName || '')}</strong> 
                           <small class="text-muted">[${time}]</small>
-                          <div>${escapeHtml(msg.content)}</div>`;
+                          <div>${nl2br(escapeHtml(msg.content))}</div>`;
 
             if (isMine) {
                 content += `
@@ -226,10 +399,17 @@
                 }
 
                 const content = e.target.dataset.content;
+                const editInput = document.getElementById("editMessageInput");
+
                 document.getElementById("editMessageId").value = id;
-                document.getElementById("editMessageInput").value = content;
+                editInput.value = content;
+
+                // Важно: обновить высоту сразу после установки значения!
+                setupTextareaHeight(editInput);
+
                 document.getElementById("editForm").classList.remove("d-none");
                 document.getElementById("messageInput").blur();
+                editInput.focus(); // Опционально: фокус в поле редактирования
             }
         });
 
@@ -248,6 +428,11 @@
             const el = createMessageElement(msg);
             container.appendChild(el);
             scrollToBottom();
+        });
+
+        // Обновление высоты textarea при получении нового сообщения
+        connection.on("ReceiveMessage", function () {
+            setupTextareaHeight(messageInput);
         });
 
         connection.on("MessageDeleted", function (id) {
