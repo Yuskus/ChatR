@@ -6,7 +6,40 @@
 }
 
 <div class="container-fluid" style="max-width: 1000px;">
-    <h4>@Model.RoomName</h4>
+    <h4>
+        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#participantsModal">
+            @Model.RoomName
+        </button>
+    </h4>
+
+    <!-- Модальное окно для участников -->
+    <div class="modal fade" id="participantsModal" tabindex="-1" aria-labelledby="participantsModalLabel" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="participantsModalLabel">Участники (@Model.RoomUsers.Count)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group">
+                        @foreach (var user in Model.RoomUsers)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@user.FirstName @user.LastName</strong>
+                                    <small class="text-muted"> (@user.Email)</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">@(user.Id == Model.CurrentUserId ? "Вы" : "")</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -67,7 +100,7 @@
 
 @section Scripts
 {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
+    <script src="~/lib/signalr/signalr.min.js"></script>
     <script>
         const container = document.getElementById("messagesList");
         const currentUserId = parseInt(container.dataset.currentUserId);

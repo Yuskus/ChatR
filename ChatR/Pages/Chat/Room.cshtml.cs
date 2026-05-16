@@ -1,4 +1,4 @@
-using ChatR.Models;
+п»їusing ChatR.Models;
 using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +23,7 @@ public class RoomModel(
     public int CurrentUserId { get; set; }
     public string CurrentUserEmail { get; set; } = "";
     public List<Message> Messages { get; set; } = [];
+    public List<User> RoomUsers { get; set; } = [];
 
     public async Task<IActionResult> OnGetAsync(int roomId)
     {
@@ -39,12 +40,10 @@ public class RoomModel(
         CurrentUserId = user.Id;
         CurrentUserEmail = user.Email;
 
-        // Проверяем, состоит ли пользователь в комнате
         var membership = await _userInRoomService.GetByUserAndRoom(user.Id, roomId);
         if (membership == null)
-            return Forbid(); // Не состоит — доступ запрещён
+            return Forbid();
 
-        // Получаем имя комнаты
         var room = await _roomService.GetById(roomId);
         if (room == null)
             return NotFound();
@@ -52,6 +51,16 @@ public class RoomModel(
         RoomName = room.Name;
 
         Messages = await _messageService.GetList(roomId, ascending: true);
+
+        var usersInRoom = await _userInRoomService.GetByRoomId(roomId);
+        if (usersInRoom == null)
+            return NotFound();
+
+        RoomUsers = usersInRoom
+            .Where(x => x.User != null)
+            .Select(x => x.User)
+            .Cast<User>()
+            .ToList();
 
         return Page();
     }
