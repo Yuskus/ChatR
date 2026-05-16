@@ -25,18 +25,26 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="@Routes.Pages.Index">Главная</a>
                         </li>
                         <li class="nav-item">
-                            @if (ViewData["CurrentUserId"] is int userId)
-                            {
+                            <a class="nav-link text-dark" asp-area="" asp-page="@Routes.Pages.Info">О проекте</a>
+                        </li>
+                        @if (ViewData["CurrentUserId"] is int userId)
+                        {
+                            <li class="nav-item">
                                 <a class="nav-link text-dark" href="@Routes.Pages.Users.Profile/@userId">Профиль</a>
-                            }
-                            else
-                            {
-                                <a class="nav-link text-dark" href="@Routes.Pages.Auth.Login">Профиль</a>
-                            }
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="@Routes.Pages.Auth.Logout">Выход</a>
-                        </li>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="@Routes.Pages.Auth.Logout">Выход</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="@Routes.Pages.Auth.Register">Регистрация</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="@Routes.Pages.Auth.Login">Вход</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
