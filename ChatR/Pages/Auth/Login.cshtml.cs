@@ -1,4 +1,4 @@
-using ChatR.Models.Constatns;
+п»їusing ChatR.Models.Constatns;
 using ChatR.Models.Structure;
 using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +22,7 @@ public class LoginModel(AuthService authService) : PageModel
 
     public void OnGet()
     {
-        // Очистка после выхода
+        // РћС‡РёСЃС‚РєР° РїРѕСЃР»Рµ РІС‹С…РѕРґР°
         TempData[Messages.ERROR] = null;
     }
 
@@ -42,11 +42,11 @@ public class LoginModel(AuthService authService) : PageModel
             return Page();
         }
 
-        // Сохраняем токен в куки
+        // РЎРѕС…СЂР°РЅСЏРµРј С‚РѕРєРµРЅ РІ РєСѓРєРё
         Response.Cookies.Append(AuthConst.TOKEN_COOKIE_NAME, token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = false, // Только HTTPS (в проде)
+            Secure = true, // РўРѕР»СЊРєРѕ HTTPS (РІ РїСЂРѕРґРµ)
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddMinutes(60)
         });
