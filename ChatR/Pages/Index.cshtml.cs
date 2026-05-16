@@ -190,6 +190,8 @@ public class IndexModel(
             CurrentUserId = user.Id;
             CurrentUserEmail = user.Email;
 
+            ViewData["CurrentUserId"] = user.Id;
+
             var memberships = await _userInRoomService.GetByUserId(user.Id);
             List<Room> rooms = [];
             foreach (var member in memberships)

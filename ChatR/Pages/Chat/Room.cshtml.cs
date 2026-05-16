@@ -40,6 +40,8 @@ public class RoomModel(
         CurrentUserId = user.Id;
         CurrentUserEmail = user.Email;
 
+        ViewData["CurrentUserId"] = user.Id;
+
         var membership = await _userInRoomService.GetByUserAndRoom(user.Id, roomId);
         if (membership == null)
             return Forbid();

@@ -1,3 +1,4 @@
+﻿using ChatR.Models;
 using ChatR.Models.Constatns;
 using ChatR.Models.Structure;
 using ChatR.Services;
@@ -12,6 +13,10 @@ public class ProfileModel(UserService userService) : PageModel
 {
     private readonly UserService _userService = userService;
 
+    public User? UserToShow { get; set; }
+    public bool IsOwnProfile { get; set; }
+    public int CurrentUserId { get; set; }
+
     [BindProperty]
     public string FirstName { get; set; } = "";
 
@@ -24,53 +29,73 @@ public class ProfileModel(UserService userService) : PageModel
     [BindProperty]
     public string? Password { get; set; }
 
+    [FromRoute]
+    public int Id { get; set; }
+
     public async Task<IActionResult> OnGetAsync()
     {
-        var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
-        if (string.IsNullOrEmpty(emailClaim))
+        var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(currentUserEmail))
             return RedirectToPage(Routes.Pages.Auth.Login);
 
-        var user = await _userService.GetByEmail(emailClaim);
-        if (user == null)
+        var userToShow = await _userService.GetById(Id);
+        if (userToShow == null)
+            return NotFound();
+
+        UserToShow = userToShow;
+
+        // Проверяем, свой ли это профиль
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null)
             return RedirectToPage(Routes.Pages.Auth.Login);
 
-        // ��������� ������
-        FirstName = user.FirstName;
-        LastName = user.LastName;
-        Patronymic = user.Patronymic;
+        CurrentUserId = currentUser.Id;
+        ViewData["CurrentUserId"] = currentUser.Id;
+
+        IsOwnProfile = currentUser?.Id == Id;
+
+        // Заполняем поля для редактирования (если свой профиль)
+        if (IsOwnProfile)
+        {
+            FirstName = userToShow.FirstName;
+            LastName = userToShow.LastName;
+            Patronymic = userToShow.Patronymic;
+        }
 
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
-        if (string.IsNullOrEmpty(emailClaim))
+        var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(currentUserEmail))
             return RedirectToPage(Routes.Pages.Auth.Login);
 
-        var currentUser = await _userService.GetByEmail(emailClaim);
-        if (currentUser == null)
-            return RedirectToPage(Routes.Pages.Auth.Login);
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null || currentUser.Id != Id)
+        {
+            TempData[Messages.ERROR] = "Access denied";
+            return Forbid();
+        }
 
-        // ��������� ������� ������
         if (string.IsNullOrWhiteSpace(FirstName))
-            ModelState.AddModelError("FirstName", "��� �����������");
+            ModelState.AddModelError("FirstName", "Имя обязательно");
 
         if (string.IsNullOrWhiteSpace(LastName))
-            ModelState.AddModelError("LastName", "������� �����������");
+            ModelState.AddModelError("LastName", "Фамилия обязательна");
 
         if (!ModelState.IsValid)
         {
+            UserToShow = await _userService.GetById(Id); // Чтобы отобразить данные при ошибке
+            IsOwnProfile = true;
             return Page();
         }
 
         try
         {
-
-            if (!string.IsNullOrWhiteSpace(Password) &&
-                Password.Length < 6)
+            if (!string.IsNullOrWhiteSpace(Password) && Password.Length < 6)
             {
-                TempData[Messages.ERROR] = "Incorrect password";
+                TempData[Messages.ERROR] = "Пароль должен быть не менее 6 символов";
                 return Page();
             }
 
@@ -83,40 +108,37 @@ public class ProfileModel(UserService userService) : PageModel
 
             if (updatedUser == null)
             {
-                TempData[Messages.ERROR] = "Error while updating user";
+                TempData[Messages.ERROR] = "Ошибка при обновлении";
                 return Page();
             }
 
-            TempData[Messages.SUCCESS] = "Data updated successfully";
-            return RedirectToPage();
-        }
-        catch (ArgumentException ex)
-        {
-            TempData[Messages.ERROR] = ex.Message;
-            return Page();
+            TempData[Messages.SUCCESS] = "Данные успешно обновлены";
+            return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
         }
         catch (Exception ex)
         {
-            TempData[Messages.ERROR] = "Error while saving: " + ex.Message;
+            TempData[Messages.ERROR] = "Ошибка: " + ex.Message;
             return Page();
         }
     }
 
     public async Task<IActionResult> OnPostDeleteAsync()
     {
-        var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
-        if (string.IsNullOrEmpty(emailClaim))
+        var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(currentUserEmail))
             return RedirectToPage(Routes.Pages.Auth.Login);
 
-        var user = await _userService.GetByEmail(emailClaim);
-        if (user == null)
-            return RedirectToPage(Routes.Pages.Auth.Login);
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null || currentUser.Id != Id)
+        {
+            TempData[Messages.ERROR] = "Access denied";
+            return Forbid();
+        }
 
         try
         {
-            await _userService.Delete(user.Id);
+            await _userService.Delete(currentUser.Id);
 
-            // ������� ����
             if (Request.Cookies[AuthConst.TOKEN_COOKIE_NAME] != null)
             {
                 Response.Cookies.Delete(AuthConst.TOKEN_COOKIE_NAME);
@@ -126,8 +148,8 @@ public class ProfileModel(UserService userService) : PageModel
         }
         catch (Exception)
         {
-            TempData[Messages.ERROR] = "Failed to delete account";
-            return RedirectToPage();
+            TempData[Messages.ERROR] = "Не удалось удалить аккаунт";
+            return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
         }
     }
 }
