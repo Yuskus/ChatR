@@ -31,7 +31,21 @@
 
     <hr class="my-4" />
 
-    <div class="text-center">
-        <a asp-page="@Routes.Pages.Index" class="btn btn-primary me-3">Перейти к чатам</a>
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <a asp-page="@Routes.Pages.Index" class="btn btn-primary">Перейти к чатам</a>
+        <div>
+            <a href="@Routes.Pages.Users.Profile/1"
+                target="_blank"
+                class="btn btn-outline-secondary"
+                rel="noopener noreferrer">ChatR</a>
+            <a href="https://vk.com/yuskus"
+                target="_blank"
+                class="btn btn-outline-secondary"
+                rel="noopener noreferrer">ВК</a>
+            <a href="https://github.com/yuskus"
+                target="_blank"
+                class="btn btn-outline-secondary"
+                rel="noopener noreferrer">GitHub</a>
+        </div>
     </div>
 </div>
