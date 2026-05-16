@@ -52,10 +52,7 @@
 
                     <dt class="col-sm-3 fw-bold text-muted">Отчество</dt>
                     <dd class="col-sm-9">@(Model.UserToShow.Patronymic ?? "-")</dd>
-
-                    <dt class="col-sm-3 fw-bold text-muted">Email</dt>
-                    <dd class="col-sm-9">@Model.UserToShow.Email</dd>
-
+                    
                     <dt class="col-sm-3 fw-bold text-muted">Дата регистрации</dt>
                     <dd class="col-sm-9">@Model.UserToShow.CreatedAt.ToString("dd.MM.yyyy")</dd>
                 </dl>
