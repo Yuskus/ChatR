@@ -1,5 +1,6 @@
 ﻿@page
 @using ChatR.Models.Structure
+@using System.Net
 @model ChatR.Pages.Chat.RoomModel
 @{
     ViewData["Title"] = $"Чат: {Model.RoomName}";
@@ -67,15 +68,15 @@
                                 @msg.User?.FirstName @msg.User?.LastName
                             </a>
                         </strong>
-                        <small class="text-muted">[@msg.Timestamp.ToString("HH:mm")]</small>
-                        <div>@Html.Raw(msg.Content.Replace("\n", "<br>"))</div>
+                        <small class="text-muted">[@msg.Timestamp.ToString("dd.MM.yyyy HH:mm")]</small>
 
+                        <div style="white-space: pre-line">@msg.Content</div>
                         @if (msg.UserId == Model.CurrentUserId)
                         {
                             <div class="mt-1">
                                 <button class="btn btn-sm btn-warning edit-btn"
                                         data-id="@msg.Id"
-                                        data-content="@msg.Content.Replace("\"", "&quot;")">
+                                        data-content="@msg.Content">
                                     Редактировать
                                 </button>
                                 <button class="btn btn-sm btn-danger delete-btn" data-id="@msg.Id">Удалить</button>
@@ -297,11 +298,6 @@
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
-        // Функция для преобразования текста с переносами строк в HTML
-        function nl2br(text) {
-            return text.replace(/\n/g, '<br>');
-        }
-
         // Создание элемента сообщения
         function createMessageElement(msg) {
             const li = document.createElement("li");
@@ -309,15 +305,30 @@
             li.dataset.messageId = msg.id;
 
             const isMine = msg.userId === currentUserId;
+            console.log(msg.userId);
 
-            const time = new Date(msg.timestamp).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            const date = new Date(msg.timestamp);
+            
+            const pad = (num) => num.toString().padStart(2, '0');
 
-            let content = `<strong>${escapeHtml(msg.user?.firstName || '')} ${escapeHtml(msg.user?.lastName || '')}</strong> 
-                          <small class="text-muted">[${time}]</small>
-                          <div>${nl2br(escapeHtml(msg.content))}</div>`;
+            const day = pad(date.getDate());
+            const month = pad(date.getMonth() + 1); // Месяцы в JS — от 0
+            const year = date.getFullYear();
+            const hours = pad(date.getHours());
+            const minutes = pad(date.getMinutes());
+
+            const formattedDate = `${day}.${month}.${year} ${hours}:${minutes}`;
+
+            let content = `<strong>
+                            ${msg.userId 
+                                ? `<a href="/Users/Profile/${msg.userId}" class="text-decoration-none">
+                                       ${escapeHtml(msg.user?.firstName || 'DELETED')} ${escapeHtml(msg.user?.lastName || 'DELETED')}
+                                   </a>`
+                                : `${escapeHtml(msg.user?.firstName || 'DELETED')} ${escapeHtml(msg.user?.lastName || 'DELETED')}`
+                            }
+                           </strong>
+                           <small class="text-muted">[${formattedDate}]</small>
+                           <div style="white-space: pre-line">${escapeHtml(msg.content)}</div>`;
 
             if (isMine) {
                 content += `
