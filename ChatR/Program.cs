@@ -7,6 +7,7 @@ using ChatR.Repos;
 using ChatR.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -28,6 +29,7 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.Name = ".ChatR.Antiforgery";
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Strict;
     options.FormFieldName = "__RequestVerificationToken";
 });
 
@@ -115,8 +117,8 @@ builder.Services.AddSignalR(options =>
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
 app.UseHsts();
+app.UseHttpsRedirection();
 
 app.UseSecurityHeaders(policies =>
     policies
