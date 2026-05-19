@@ -20,6 +20,12 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.AddServerHeader = false;
 });
 
+builder.Services.AddHsts(options =>
+{
+    options.ExcludedHosts.Clear();
+    options.IncludeSubDomains = true;
+});
+
 // http
 builder.Services.AddControllers();
 
@@ -158,6 +164,15 @@ app.UseSecurityHeaders(policies => policies
     {
         builder.AddUpgradeInsecureRequests();
 
+        builder.AddFrameAncestors()
+            .Self();
+
+        builder.AddFormAction()
+            .Self();
+
+        builder.AddBaseUri()
+            .None();
+
         builder.AddDefaultSrc()
             .Self();
 
@@ -176,7 +191,8 @@ app.UseSecurityHeaders(policies => policies
     .AddReferrerPolicyNoReferrer()
     .AddStrictTransportSecurityMaxAgeIncludeSubDomains()
     // addinionally
-    .AddPermissionsPolicyWithDefaultSecureDirectives());
+    .AddPermissionsPolicyWithDefaultSecureDirectives()
+    .AddContentTypeOptionsNoSniff());
 
 app.UseRouting();
 app.UseCors("AllowAll");
