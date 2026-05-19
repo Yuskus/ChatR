@@ -1,6 +1,6 @@
 ﻿namespace ChatR.Models;
 
-public class UserInRoom
+public record UserInRoom
 {
     public int Id { get; set; }
     public required DateTime CreatedAt { get; set; } = DateTime.Now;

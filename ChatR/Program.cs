@@ -7,30 +7,47 @@ using ChatR.Repos;
 using ChatR.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.AddServerHeader = false;
+});
+
 // http
 builder.Services.AddControllers();
-
-builder.Services.AddHsts(options =>
-{
-    options.ExcludedHosts.Clear();
-    options.IncludeSubDomains = true;
-});
 
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X‑XSRF‑Token";
     options.Cookie.Name = ".ChatR.Antiforgery";
     options.Cookie.HttpOnly = true;
+#if DEBUG
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+#else
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+#endif
     options.Cookie.SameSite = SameSiteMode.Strict;
     options.FormFieldName = "__RequestVerificationToken";
+});
+
+// явно указываем опции для TempData
+builder.Services.Configure<CookieTempDataProviderOptions>(options =>
+{
+    options.Cookie.HttpOnly = true;
+#if DEBUG
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+#else
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+#endif
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.Name = ".ChatR.TempData";
 });
 
 // cors
@@ -105,7 +122,11 @@ builder.Services.AddDataProtection()
     .SetApplicationName("ChatR")
     .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
 
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages()
+    .AddViewOptions(options =>
+    {
+        options.HtmlHelperOptions.ClientValidationEnabled = true;
+    });
 
 // signalr
 builder.Services.AddSignalR(options =>
@@ -115,15 +136,47 @@ builder.Services.AddSignalR(options =>
     options.EnableDetailedErrors = true;
 });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 app.UseHsts();
 app.UseHttpsRedirection();
+app.UseForwardedHeaders();
 
-app.UseSecurityHeaders(policies =>
-    policies
-        .AddDefaultSecurityHeaders()
-        .AddPermissionsPolicyWithDefaultSecureDirectives());
+app.UseSecurityHeaders(policies => policies
+    // default
+    .AddFrameOptionsDeny()
+    .AddContentTypeOptionsNoSniff()
+    .RemoveServerHeader()
+    .AddContentSecurityPolicy(builder =>
+    {
+        builder.AddUpgradeInsecureRequests();
+
+        builder.AddDefaultSrc()
+            .Self();
+
+        builder.AddImgSrc()
+            .Self()
+            .Data(); // for icons: "data:image/svg+xml"
+
+        builder.AddScriptSrc()
+            .Self()
+            .WithNonce(); // for script type="importmap"
+    })
+    .AddCrossOriginOpenerPolicy(x => x.SameOrigin())
+    .AddCrossOriginEmbedderPolicy(builder => builder.Credentialless())
+    .AddCrossOriginResourcePolicy(builder => builder.SameSite())
+    // modified default
+    .AddReferrerPolicyNoReferrer()
+    .AddStrictTransportSecurityMaxAgeIncludeSubDomains()
+    // addinionally
+    .AddPermissionsPolicyWithDefaultSecureDirectives());
 
 app.UseRouting();
 app.UseCors("AllowAll");
@@ -134,6 +187,18 @@ using (var scope = app.Services.CreateScope())
 
     await context.Database.MigrateAsync();
 }
+
+// общее
+app.UseCookiePolicy(new CookiePolicyOptions
+{
+#if DEBUG
+    Secure = CookieSecurePolicy.SameAsRequest,
+#else
+    Secure = CookieSecurePolicy.Always,
+#endif
+    HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always,
+    MinimumSameSitePolicy = SameSiteMode.Strict
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

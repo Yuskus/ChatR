@@ -14,5 +14,5 @@ public record Message
 
     public string Author => User != null
         ? $"{User.FirstName} {User.LastName}"
-        : "Deleted Deleted";
+        : "DELETED DELETED";
 }

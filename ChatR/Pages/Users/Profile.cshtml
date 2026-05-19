@@ -1,6 +1,5 @@
 ﻿@page "{id:int}"
 @using ChatR.Models.Constatns
-@using ChatR.Models.Structure
 @model ChatR.Pages.Users.ProfileModel
 @{
     ViewData["Title"] = Model.UserToShow != null
@@ -8,7 +7,7 @@
         : "Профиль";
 }
 
-<div class="container mt-4" style="max-width: 800px;">
+<div class="container mt-4 profile-block">
     <h4 class="mb-4">Профиль пользователя</h4>
 
     @if (TempData[Messages.SUCCESS] != null)
@@ -138,25 +137,5 @@
 @section Scripts
 {
     <partial name="_ValidationScriptsPartial" />
-
-    <script>
-        const viewMode = document.querySelector(".card"); // Основная карточка
-        const editMode = document.getElementById("editMode");
-        const editButton = document.getElementById("editButton");
-        const cancelEdit = document.getElementById("cancelEdit");
-
-        editButton?.addEventListener("click", () => {
-            viewMode.classList.add("d-none");
-            editButton.classList.add("d-none");
-
-            editMode.classList.remove("d-none");
-        });
-
-        cancelEdit?.addEventListener("click", () => {
-            viewMode.classList.remove("d-none");
-            editButton.classList.remove("d-none");
-
-            editMode.classList.add("d-none");
-        });
-    </script>
+    <script src="~/js/users/profile.js"></script>
 }

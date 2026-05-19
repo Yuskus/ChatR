@@ -22,6 +22,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNET_CONFIGURATION}
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
+      - ASPNETCORE_URLS=http://0.0.0.0:${HTTP_PORT}
     restart: always
     ports:
       - "${HTTP_PORT}:8080"

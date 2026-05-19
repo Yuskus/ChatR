@@ -134,13 +134,5 @@
 
 @section Scripts
 {
-    <script>
-        // Передача roomId в форму
-        document.querySelectorAll('[data-bs-target="#addMemberModal"]').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const roomId = this.dataset.roomId;
-                document.getElementById('modalRoomId').value = roomId;
-            });
-        });
-    </script>
+    <script src="~/js/site.js"></script>
 }
