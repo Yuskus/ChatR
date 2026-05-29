@@ -63,7 +63,7 @@
                     <li class="list-group-item border-0" data-message-id="@msg.Id">
                         <strong>
                             <a href="@Routes.Pages.Users.Profile/@msg.UserId" class="text-decoration-none">
-                                @msg.User?.FirstName @msg.User?.LastName
+                                @(msg.User?.FirstName ?? "DELETED") @(msg.User?.LastName ?? "DELETED")
                             </a>
                         </strong>
                         <small class="text-muted">[@msg.Timestamp.ToString("dd.MM.yyyy HH:mm")]</small>

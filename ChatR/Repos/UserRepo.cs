@@ -8,6 +8,12 @@ public class UserRepo(ApplicationDbContext context)
 {
     private readonly ApplicationDbContext _context = context;
 
+    public async Task<int> Count()
+    {
+        return await _context.Users
+            .CountAsync();
+    }
+
     public async Task<User?> GetById(int id)
     {
         return await _context.Users

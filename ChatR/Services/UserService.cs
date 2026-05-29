@@ -10,6 +10,11 @@ public class UserService(UserRepo userRepo)
 {
     private readonly UserRepo _userRepo = userRepo;
 
+    public async Task<int> Count()
+    {
+        return await _userRepo.Count();
+    }
+
     public async Task<User?> GetById(int id)
     {
         if (id <= 0)

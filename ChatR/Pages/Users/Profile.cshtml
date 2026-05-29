@@ -43,17 +43,20 @@
 
                 <!-- Таблица информации -->
                 <dl class="row mb-0">
-                    <dt class="col-sm-3 fw-bold text-muted">Фамилия</dt>
-                    <dd class="col-sm-9">@Model.UserToShow.LastName</dd>
+                    <dt class="col-sm-4 fw-bold text-muted">Фамилия</dt>
+                    <dd class="col-sm-8">@Model.UserToShow.LastName</dd>
 
-                    <dt class="col-sm-3 fw-bold text-muted">Имя</dt>
-                    <dd class="col-sm-9">@Model.UserToShow.FirstName</dd>
+                    <dt class="col-sm-4 fw-bold text-muted">Имя</dt>
+                    <dd class="col-sm-8">@Model.UserToShow.FirstName</dd>
 
-                    <dt class="col-sm-3 fw-bold text-muted">Отчество</dt>
-                    <dd class="col-sm-9">@(Model.UserToShow.Patronymic ?? "-")</dd>
+                    <dt class="col-sm-4 fw-bold text-muted">Отчество</dt>
+                    <dd class="col-sm-8">@(Model.UserToShow.Patronymic ?? "-")</dd>
                     
-                    <dt class="col-sm-3 fw-bold text-muted">Дата регистрации</dt>
-                    <dd class="col-sm-9">@Model.UserToShow.CreatedAt.ToString("dd.MM.yyyy")</dd>
+                    <dt class="col-sm-4 fw-bold text-muted">Дата регистрации</dt>
+                    <dd class="col-sm-8">@Model.UserToShow.CreatedAt.ToString("dd.MM.yyyy")</dd>
+
+                    <dt class="col-sm-4 fw-bold text-muted">Дата последнего входа:</dt>
+                    <dd class="col-sm-8">@(Model.UserToShow.LastLogin?.ToString("dd.MM.yyyy") ?? "-")</dd>
                 </dl>
             </div>
         </div>

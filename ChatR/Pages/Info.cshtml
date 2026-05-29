@@ -11,21 +11,27 @@
 
     <div class="row">
         <div class="col-lg-10">
-            <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. Ut in nulla enim.
+            <p>Этот проект создавался изначально с целью изучить SignalR, 
+                но, как это частенько бывает, сносить наработки было жалко. 
+                Решила разместить его на сервере - было интересно попробовать 
+                впервые развернуть сайт на поддомене. Настроила https, затем стала 
+                экспериментировать с заголовками безопасности (по книжке), информация об этом 
+                <a href="https://vk.com/wall-221336982_135" target="_blank" rel="noopener noreferrer">тут, если интересно</a>.
             </p>
-            <p>
-                Phasellus molestie magna non est bibendum non venenatis nisl tempor. Suspendisse dictum feugiat nisl ut dapibus. Mauris iaculis porttitor posuere. Praesent id metus massa, ut blandit odio. Proin quis tortor orci. Etiam at risus et justo dignissim congue.
-            </p>
-            <p>
-                Donec congue turpis in sapien laoreet eget rutrum lorem hendrerit. Ut et ultrices nisi. Maecenas wisi purus, ultrices a ullamcorper non, fringilla nec magna. Fusce commodo quis risus quis aliquam. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi blandit accumsan felis.
-            </p>
-            <p>
-                Curabitur vel libero sit amet nulla elementum tincidunt vitae ut magna. Sed id ligula ac nunc mollis ultricies. Aenean hendrerit porta felis, nec tristique augue vulputate sed. Cras neque lacus, tincidunt sit amet venenatis ut, facilisis vel ipsum.
-            </p>
-            <p>
-                Vivamus vel urna quis elit convallis viverra. Nunc fermentum, magna non rhoncus volutpat, enim orci tincidunt arcu, sit amet elementum magna lectus ut diam. Donec scelerisque scelerisque felis, et egestas dolor ornare quis.
-            </p>
+
+            <p>По возможности на досуге буду добавлять разные функции. В планах в ближайшей перспективе сделать "друзей". А пока:</p>
+
+            <ul>
+                <li>можно зарегистрироваться, при регистрации email не проверяется, можно пофантазировать (пока)</li>
+                <li>можно создать комнату (диалог), остаться в ней одному (организация хранения заметок), добавить в неё собеседника (диалог) или нескольких человек (група)</li>
+                <li>список участников можно посмотреть наверху комнаты, кликнув на её название</li>
+                <li>перейдя в профиль пользователя, можно изучить его информацию (ФИО, дата регистрации, дата последнего входа)</li>
+                <li>сообщения, диалоги и аккаунты чистятся: сообщения, которым более 2 недель, группы, которым более месяца, и пользователи, последняя активность которых была более чем 3 месяца назад</li>
+                <li>если пользователь оставил сообщения в диалоге и удалил аккаунт, его сообщения сохраняются в диалоге без указания имени автора (будут удалены в срок - через две недели после создания)</li>
+                <li>долгим нажатием по клавише отправки сообщения можно выбрать способ отправки - через Enter или Ctrl+Enter</li>
+            </ul>
+
+            Зарегистрированных пользователей: @Model.UsersCount
         </div>
     </div>
 

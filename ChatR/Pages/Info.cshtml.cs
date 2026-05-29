@@ -8,11 +8,14 @@ public class InfoModel(UserService userService) : PageModel
 {
     private readonly UserService _userService = userService;
 
+    public int UsersCount { get; set; }
     public int CurrentUserId { get; set; }
 
     public async Task OnGetAsync()
     {
         var email = User.FindFirst(ClaimTypes.Email)?.Value;
+        UsersCount = await _userService.Count();
+
         if (!string.IsNullOrEmpty(email))
         {
             var user = await _userService.GetByEmail(email);
