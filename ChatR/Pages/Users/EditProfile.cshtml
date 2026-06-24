@@ -1,0 +1,94 @@
+@page
+@using ChatR.Models.Constatns
+@using ChatR.Models.Structure
+@model ChatR.Pages.Users.EditProfileModel
+@{
+    ViewData["Title"] = "Редактирование профиля";
+}
+
+<div class="container mt-4">
+    <h4 class="mb-4">Редактирование профиля</h4>
+
+    @if (TempData[Messages.SUCCESS] != null)
+    {
+        <div class="alert alert-success">@TempData[Messages.SUCCESS]</div>
+    }
+    @if (TempData[Messages.ERROR] != null)
+    {
+        <div class="alert alert-danger">@TempData[Messages.ERROR]</div>
+    }
+
+    <div class="mb-3">
+        <a href="@Routes.Pages.Users.Profile/@Model.UserId" class="btn btn-secondary">
+            ← Назад к профилю
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">Изменение данных</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" asp-page-handler="Update">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FirstName" class="form-label">Имя</label>
+                        <input asp-for="FirstName" class="form-control" required />
+                        <span asp-validation-for="FirstName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="LastName" class="form-label">Фамилия</label>
+                        <input asp-for="LastName" class="form-control" required />
+                        <span asp-validation-for="LastName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Patronymic" class="form-label">Отчество</label>
+                        <input asp-for="Patronymic" class="form-control" />
+                        <span asp-validation-for="Patronymic" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="Password" class="form-label">Новый пароль (оставьте пустым, чтобы не менять)</label>
+                        <input id="Password"
+                               name="Password"
+                               type="password"
+                               class="form-control"
+                               minlength="6"
+                               placeholder="••••••" />
+                        <div class="form-text">Минимум 6 символов</div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Сохранить</button>
+                    <a href="@Routes.Pages.Users.Profile/@Model.UserId" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Удаление аккаунта -->
+    <div class="card shadow-sm mt-4" id="removeUser">
+        <div class="card-body">
+            <h6 class="text-danger">Удаление аккаунта</h6>
+            <p class="text-muted small">Это действие нельзя отменить. Все ваши сообщения останутся, но аккаунт будет удалён.</p>
+            <form method="post" asp-page-handler="Delete" id="deleteForm">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                    class="btn btn-sm btn-outline-danger delete-btn">
+                        Удалить аккаунт
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/users/editProfile.js"></script>
+}

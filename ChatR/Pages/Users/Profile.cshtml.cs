@@ -1,4 +1,4 @@
-﻿using ChatR.Models;
+using ChatR.Models;
 using ChatR.Models.Constatns;
 using ChatR.Models.Structure;
 using ChatR.Services;
@@ -9,33 +9,28 @@ using AuthConst = ChatR.Models.Constatns.Auth;
 
 namespace ChatR.Pages.Users;
 
-public class ProfileModel(UserService userService) : PageModel
+public class ProfileModel(UserService userService, ObservingService observingService) : PageModel
 {
     private readonly UserService _userService = userService;
-
+    private readonly ObservingService _observingService = observingService;
+    public int CurrentUserId { get; set; }
     public User? UserToShow { get; set; }
     public bool IsOwnProfile { get; set; }
-    public int CurrentUserId { get; set; }
-
-    [BindProperty]
-    public string FirstName { get; set; } = "";
-
-    [BindProperty]
-    public string LastName { get; set; } = "";
-
-    [BindProperty]
-    public string? Patronymic { get; set; }
-
-    [BindProperty]
-    public string? Password { get; set; }
+    public bool IsSubscribed { get; set; }
+    public int UsersFromCount { get; set; } = 0;
+    public int UsersToCount { get; set; } = 0;
 
     [FromRoute]
     public int Id { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
-        var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+        var currentUserEmail = User?.FindFirst(ClaimTypes.Email)?.Value;
         if (string.IsNullOrEmpty(currentUserEmail))
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null)
             return RedirectToPage(Routes.Pages.Auth.Login);
 
         var userToShow = await _userService.GetById(Id);
@@ -43,88 +38,27 @@ public class ProfileModel(UserService userService) : PageModel
             return NotFound();
 
         UserToShow = userToShow;
-
-        // Проверяем, свой ли это профиль
-        var currentUser = await _userService.GetByEmail(currentUserEmail);
-        if (currentUser == null)
-            return RedirectToPage(Routes.Pages.Auth.Login);
-
+        
         CurrentUserId = currentUser.Id;
         ViewData["CurrentUserId"] = currentUser.Id;
+        
+        IsOwnProfile = currentUser.Id == Id;
+        UsersFromCount = await _observingService.GetUsersFromCount(Id);
+        UsersToCount = await _observingService.GetUsersToCount(Id);
 
-        IsOwnProfile = currentUser?.Id == Id;
-
-        // Заполняем поля для редактирования (если свой профиль)
-        if (IsOwnProfile)
+        // Проверяем, подписан ли текущий пользователь на этого пользователя
+        if (!IsOwnProfile)
         {
-            FirstName = userToShow.FirstName;
-            LastName = userToShow.LastName;
-            Patronymic = userToShow.Patronymic;
+            var observing = await _observingService.GetByIdPair(currentUser.Id, Id);
+            IsSubscribed = observing != null;
         }
 
         return Page();
     }
 
-    public async Task<IActionResult> OnPostAsync()
-    {
-        var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-        if (string.IsNullOrEmpty(currentUserEmail))
-            return RedirectToPage(Routes.Pages.Auth.Login);
-
-        var currentUser = await _userService.GetByEmail(currentUserEmail);
-        if (currentUser == null || currentUser.Id != Id)
-        {
-            TempData[Messages.ERROR] = "Access denied";
-            return Forbid();
-        }
-
-        if (string.IsNullOrWhiteSpace(FirstName))
-            ModelState.AddModelError("FirstName", "Имя обязательно");
-
-        if (string.IsNullOrWhiteSpace(LastName))
-            ModelState.AddModelError("LastName", "Фамилия обязательна");
-
-        if (!ModelState.IsValid)
-        {
-            UserToShow = await _userService.GetById(Id); // Чтобы отобразить данные при ошибке
-            IsOwnProfile = true;
-            return Page();
-        }
-
-        try
-        {
-            if (!string.IsNullOrWhiteSpace(Password) && Password.Length < 6)
-            {
-                TempData[Messages.ERROR] = "Пароль должен быть не менее 6 символов";
-                return Page();
-            }
-
-            var updatedUser = await _userService.Update(
-                id: currentUser.Id,
-                password: Password,
-                firstName: FirstName.Trim(),
-                lastName: LastName.Trim(),
-                patronymic: Patronymic?.Trim());
-
-            if (updatedUser == null)
-            {
-                TempData[Messages.ERROR] = "Ошибка при обновлении";
-                return Page();
-            }
-
-            TempData[Messages.SUCCESS] = "Данные успешно обновлены";
-            return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
-        }
-        catch (Exception ex)
-        {
-            TempData[Messages.ERROR] = "Ошибка: " + ex.Message;
-            return Page();
-        }
-    }
-
     public async Task<IActionResult> OnPostDeleteAsync()
     {
-        var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+        var currentUserEmail = User?.FindFirst(ClaimTypes.Email)?.Value;
         if (string.IsNullOrEmpty(currentUserEmail))
             return RedirectToPage(Routes.Pages.Auth.Login);
 
@@ -151,5 +85,65 @@ public class ProfileModel(UserService userService) : PageModel
             TempData[Messages.ERROR] = "Не удалось удалить аккаунт";
             return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
         }
+    }
+
+    public async Task<IActionResult> OnPostSubscribeAsync()
+    {
+        var currentUserEmail = User?.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(currentUserEmail))
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null)
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        try
+        {
+            if (currentUser.Id == Id)
+            {
+                TempData[Messages.ERROR] = "Нельзя подписаться на самого себя";
+                return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
+            }
+
+            await _observingService.Add(currentUser.Id, Id);
+            TempData[Messages.SUCCESS] = "Вы подписались на пользователя";
+        }
+        catch (ArgumentException ex)
+        {
+            TempData[Messages.ERROR] = ex.Message;
+        }
+
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
+    }
+
+    public async Task<IActionResult> OnPostUnsubscribeAsync()
+    {
+        var currentUserEmail = User?.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(currentUserEmail))
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null)
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        try
+        {
+            var observing = await _observingService.GetByIdPair(currentUser.Id, Id);
+            if (observing != null)
+            {
+                await _observingService.Delete(observing.Id);
+                TempData[Messages.SUCCESS] = "Вы отписались от пользователя";
+            }
+            else
+            {
+                TempData[Messages.ERROR] = "Подписка не найдена";
+            }
+        }
+        catch (ArgumentException ex)
+        {
+            TempData[Messages.ERROR] = ex.Message;
+        }
+
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
     }
 }

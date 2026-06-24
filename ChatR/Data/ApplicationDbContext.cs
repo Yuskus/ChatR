@@ -10,6 +10,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<UserInRoom> UsersInRoom { get; set; }
     public DbSet<Room> Rooms { get; set; }
+    public DbSet<Observing> Observings { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -22,6 +23,7 @@ public class ApplicationDbContext : DbContext
         AddUsers(modelBuilder);
         AddRooms(modelBuilder);
         AddUsersInRoom(modelBuilder);
+        AddObservings(modelBuilder);
     }
 
     private static void AddMessages(ModelBuilder modelBuilder)
@@ -129,6 +131,32 @@ public class ApplicationDbContext : DbContext
                 .HasOne(p => p.Room)
                 .WithMany(p => p.UsersInRoom)
                 .HasForeignKey(p => p.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void AddObservings(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Observing>(observing =>
+        {
+            observing.ToTable("observing");
+
+            observing.HasIndex(x => new { x.UserFromId, x.UserToId }).IsUnique();
+
+            observing
+                .Property(p => p.CreatedAt)
+                .HasDefaultValueSql(Sql.NOW)
+                .IsRequired();
+
+            observing
+                .HasOne(p => p.UserFrom)
+                .WithMany(p => p.ObservingsFrom)
+                .HasForeignKey(p => p.UserFromId)
+                .OnDelete(DeleteBehavior.Cascade);
+            observing
+                .HasOne(p => p.UserTo)
+                .WithMany(p => p.ObservingsTo)
+                .HasForeignKey(p => p.UserToId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

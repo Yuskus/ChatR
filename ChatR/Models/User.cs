@@ -12,6 +12,8 @@ public record User
     public string? Patronymic { get; set; }
     public required UserRole Role { get; set; } = UserRole.User;
     public virtual List<UserInRoom> UsersInRoom { get; set; } = [];
+    public virtual List<Observing> ObservingsFrom { get; set; } = [];
+    public virtual List<Observing> ObservingsTo { get; set; } = [];
 }
 
 public enum UserRole

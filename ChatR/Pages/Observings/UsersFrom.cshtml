@@ -1,0 +1,47 @@
+@page "{userId:int}"
+@using ChatR.Models.Constatns
+@using ChatR.Models.Structure
+@model ChatR.Pages.Observings.UsersFromModel
+@{
+    ViewData["Title"] = "Подписки";
+}
+
+<div class="container mt-4">
+    <h4 class="mb-4">Подписки пользователя (@Model.UsersFromCount)</h4>
+
+    @if (TempData[Messages.SUCCESS] != null)
+    {
+        <div class="alert alert-success">@TempData[Messages.SUCCESS]</div>
+    }
+    @if (TempData[Messages.ERROR] != null)
+    {
+        <div class="alert alert-danger">@TempData[Messages.ERROR]</div>
+    }
+
+    @if (Model.Observings == null || !Model.Observings.Any())
+    {
+        <div class="alert alert-info">Пользователь пока ни на кого не подписан.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var observing in Model.Observings)
+            {
+                var user = observing.UserTo;
+                if (user == null) continue;
+
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">@user.LastName @user.FirstName @user.Patronymic</h6>
+                            <p class="card-text text-muted small">Подписан: @observing.CreatedAt.ToString("dd.MM.yyyy")</p>
+                            <a href="@Routes.Pages.Users.Profile/@user.Id" class="btn btn-outline-primary btn-sm">
+                                Перейти к профилю
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
