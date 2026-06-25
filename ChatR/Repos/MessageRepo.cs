@@ -1,5 +1,6 @@
-﻿using ChatR.Data;
+using ChatR.Data;
 using ChatR.Models;
+using ChatR.Models.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatR.Repos;
@@ -76,5 +77,24 @@ public class MessageRepo(ApplicationDbContext context)
         };
 
         return await query.ToListAsync();
+    }
+
+    public async Task<PageList<Message>> GetList(int roomId, bool asc, int limit, int offset)
+    {
+        var query = _context.Messages
+            .Include(uir => uir.User)
+            .Where(uir => uir.RoomId == roomId)
+            .AsQueryable();
+
+        query = asc switch
+        {
+            true => query.OrderBy(uir => uir.Timestamp),
+            _ => query.OrderByDescending(uir => uir.Timestamp),
+        };
+
+        var total = await query.CountAsync();
+        var items = await query.Skip(offset).Take(limit).ToListAsync();
+
+        return new PageList<Message>(items, total);
     }
 }

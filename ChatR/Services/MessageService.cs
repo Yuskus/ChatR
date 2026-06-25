@@ -1,4 +1,5 @@
-﻿using ChatR.Models;
+using ChatR.Models;
+using ChatR.Models.Common;
 using ChatR.Models.Constatns;
 using ChatR.Repos;
 
@@ -118,5 +119,19 @@ public class MessageService(
             throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(roomId));
 
         return await _messageRepo.GetList(roomId, ascending);
+    }
+
+    public async Task<PageList<Message>> GetList(int roomId, bool asc, int limit, int offset)
+    {
+        if (roomId <= 0)
+            throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(roomId));
+
+        if (limit <= 0)
+            throw new ArgumentException("Лимит должен быть положительным числом", nameof(limit));
+
+        if (offset < 0)
+            throw new ArgumentException("Смещение не может быть отрицательным", nameof(offset));
+
+        return await _messageRepo.GetList(roomId, asc, limit, offset);
     }
 }
