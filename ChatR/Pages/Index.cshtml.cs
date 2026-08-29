@@ -19,6 +19,7 @@ public class IndexModel(
     private readonly UserService _userService = userService;
 
     public List<Room> UserRooms { get; set; } = [];
+    public Dictionary<int, RoomRole> RoomRoles { get; set; } = [];
     public string CurrentUserEmail { get; set; } = "";
     public int CurrentUserId { get; set; }
 
@@ -201,6 +202,7 @@ public class IndexModel(
                 if (room != null)
                 {
                     rooms.Add(room);
+                    RoomRoles[room.Id] = member.RoomRole;
                 }
             }
 

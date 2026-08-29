@@ -29,10 +29,6 @@ public class RoomService(RoomRepo roomRepo)
         if (name.Length > 100)
             throw new ArgumentException("Имя комнаты не может превышать 100 символов", nameof(name));
 
-        if (await _roomRepo.ExistsByName(name))
-            throw new ArgumentException($"Комната с именем '{name}' уже существует", nameof(name));
-
-
         return await _roomRepo.Add(new Room
         {
             Name = name
