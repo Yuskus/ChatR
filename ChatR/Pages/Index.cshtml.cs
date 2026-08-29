@@ -5,6 +5,7 @@ using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace ChatR.Pages;
 
@@ -12,11 +13,13 @@ namespace ChatR.Pages;
 public class IndexModel(
     RoomService roomService,
     UserInRoomService userInRoomService,
-    UserService userService) : PageModel
+    UserService userService,
+    ObservingService observingService) : PageModel
 {
     private readonly RoomService _roomService = roomService;
     private readonly UserInRoomService _userInRoomService = userInRoomService;
     private readonly UserService _userService = userService;
+    private readonly ObservingService _observingService = observingService;
 
     public List<Room> UserRooms { get; set; } = [];
     public Dictionary<int, RoomRole> RoomRoles { get; set; } = [];
@@ -26,12 +29,10 @@ public class IndexModel(
     [BindProperty]
     public string NewRoomName { get; set; } = "";
 
-    // Для поиска пользователя
-    [BindProperty(SupportsGet = true)]
-    public string? UserIdentifier { get; set; }
+    public List<User> FollowedUsers { get; set; } = [];
 
-    public User? FoundUser { get; set; }
-    public string? FoundUserError { get; set; }
+    [BindProperty]
+    public int SelectedUserId { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -108,12 +109,11 @@ public class IndexModel(
         return await LoadRoomsAsync();
     }
 
-    // 🔥 Поиск и добавление участника
-    public async Task<IActionResult> OnPostAddMemberAsync(int roomId, string userIdentifier)
+    public async Task<IActionResult> OnPostAddMemberAsync(int roomId)
     {
-        if (string.IsNullOrWhiteSpace(userIdentifier))
+        if (SelectedUserId <= 0)
         {
-            FoundUserError = "Введите email или ID";
+            TempData[Messages.ERROR] = "Выберите пользователя";
             return await LoadRoomsAsync();
         }
 
@@ -124,53 +124,32 @@ public class IndexModel(
         var room = await _roomService.GetById(roomId);
         if (room == null)
         {
-            TempData[Messages.ERROR] = "Room not found";
+            TempData[Messages.ERROR] = "Комната не найдена";
             return await LoadRoomsAsync();
         }
 
         var membership = await _userInRoomService.GetByUserAndRoom(admin.Id, roomId);
         if (membership?.RoomRole != RoomRole.Admin)
         {
-            TempData[Messages.ERROR] = "Only the administrator can add members";
+            TempData[Messages.ERROR] = "Только администратор может добавлять участников";
             return await LoadRoomsAsync();
         }
 
-        // Поиск пользователя
-        User? foundUser;
-
-        if (int.TryParse(userIdentifier, out var userId))
-        {
-            foundUser = await _userService.GetById(userId);
-        }
-        else
-        {
-            foundUser = await _userService.GetByEmail(userIdentifier);
-        }
-
-        if (foundUser == null)
-        {
-            FoundUserError = "Пользователь не найден";
-            UserIdentifier = userIdentifier;
-            return await LoadRoomsAsync();
-        }
-
-        // Проверим, не состоит ли уже
-        var existing = await _userInRoomService.GetByUserAndRoom(foundUser.Id, roomId);
+        var existing = await _userInRoomService.GetByUserAndRoom(SelectedUserId, roomId);
         if (existing != null)
         {
-            TempData[Messages.ERROR] = "The user is already in the room";
+            TempData[Messages.ERROR] = "Этот пользователь уже в комнате";
             return await LoadRoomsAsync();
         }
 
-        // Добавляем
         try
         {
-            await _userInRoomService.Add(foundUser.Id, roomId, RoomRole.Member);
-            TempData[Messages.SUCCESS] = $"User {foundUser.Email} has been added to the room";
+            await _userInRoomService.Add(SelectedUserId, roomId, RoomRole.Member);
+            TempData[Messages.SUCCESS] = "Участник добавлен";
         }
         catch (Exception ex)
         {
-            TempData[Messages.ERROR] = "Error while adding: " + ex.Message;
+            TempData[Messages.ERROR] = "Ошибка при добавлении: " + ex.Message;
         }
 
         return await LoadRoomsAsync();
@@ -193,6 +172,17 @@ public class IndexModel(
 
             ViewData["CurrentUserId"] = user.Id;
 
+            var observingList = await _observingService.GetUsersFromById(user.Id);
+            FollowedUsers = [];
+            foreach (var obs in observingList)
+            {
+                var followedUser = await _userService.GetById(obs.UserToId);
+                if (followedUser != null)
+                {
+                    FollowedUsers.Add(followedUser);
+                }
+            }
+
             var memberships = await _userInRoomService.GetByUserId(user.Id);
             List<Room> rooms = [];
             foreach (var member in memberships)
@@ -207,6 +197,10 @@ public class IndexModel(
             }
 
             UserRooms = rooms;
+
+            ViewData["FollowedUsersJson"] = JsonSerializer.Serialize(
+                FollowedUsers.Select(u => new { u.Id, Name = u.LastName + " " + u.FirstName + " " + (u.Patronymic ?? "") }),
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
         catch (Exception ex)
         {

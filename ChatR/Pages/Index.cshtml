@@ -109,26 +109,20 @@
                     <input type="hidden" name="roomId" id="modalRoomId" />
 
                     <div class="mb-3">
-                        <label for="userIdentifier" class="form-label">Email или ID пользователя</label>
+                        <label for="memberSearch" class="form-label">Поиск по ФИО</label>
                         <input type="text"
                                class="form-control"
-                               id="userIdentifier"
-                               name="userIdentifier"
-                               placeholder="Введите email или ID" />
+                               id="memberSearch"
+                               placeholder="Начните вводить фамилию или имя..."
+                               data-users='@Html.Raw(ViewData["FollowedUsersJson"])' />
                     </div>
 
-                    @if (!string.IsNullOrEmpty(Model.FoundUserError))
-                    {
-                        <div class="alert alert-danger">@Model.FoundUserError</div>
-                    }
-                    @if (Model.FoundUser != null)
-                    {
-                        <div class="alert alert-success">
-                            Найден: <strong>@Model.FoundUser.Email</strong>
-                            (@Model.FoundUser.FirstName @Model.FoundUser.LastName)
-                            <input type="hidden" name="userId" value="@Model.FoundUser.Id" />
-                        </div>
-                    }
+                    <div class="mb-3">
+                        <label for="memberSelect" class="form-label">Выберите пользователя</label>
+                        <select class="form-select" id="memberSelect" name="SelectedUserId">
+                            <option value="">-- Начните поиск ниже --</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
