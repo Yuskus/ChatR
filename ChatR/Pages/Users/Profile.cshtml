@@ -155,7 +155,7 @@
                     @foreach (var post in Model.Posts)
                     {
                         <div class="post-item mb-3 pb-3 border-bottom">
-                            <p class="mb-1">@post.Content</p>
+                            <div class="multiline-text">@post.Content</div>
                             <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
 
                             @if (Model.IsOwnProfile)

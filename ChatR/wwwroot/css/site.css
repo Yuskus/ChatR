@@ -54,3 +54,7 @@ body {
     overflow: hidden;
     height: calc(1.5em + 0.75rem);
 }
+
+.feed-block {
+    max-width: 400px;
+}
