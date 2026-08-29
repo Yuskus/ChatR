@@ -101,90 +101,180 @@
                 }
             </div>
         }
-    }
 
-    <!-- Посты на стене -->
-    <div id="posts-anchor" data-skip="@Model.Skip"></div>
-    @if (Model.Posts.Count > 0)
-    {
-        <div class="card shadow-sm mt-4">
-            <div class="card-body">
-                <h5 class="card-title text-primary border-bottom pb-2 mb-3">
-                    Посты на стене (@Model.TotalPostCount)
-                </h5>
-                @foreach (var post in Model.Posts)
-                {
-                    <div class="post-item mb-3 pb-3 border-bottom">
-                        <p class="mb-1">@post.Content</p>
-                        <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
-                    </div>
-                }
+        <!-- Посты на стене -->
+        <div id="posts-anchor" data-skip="@Model.Skip"></div>
 
-                <!-- Пагинация -->
-                @if (Model.TotalPages > 1)
-                {
-                    <nav class="mt-3 pt-2">
-                        <ul class="pagination justify-content-center mb-0">
-                            <!-- Назад -->
-                            @if (Model.CurrentPage > 1)
+        @if (Model.TotalPostCount == 0)
+        {
+            <div class="card shadow-sm mt-4">
+                <div class="card-body text-center text-muted py-4">
+                    <p class="mb-3">Постов нет</p>
+
+                    @if (Model.IsOwnProfile)
+                    {
+                        <form method="post" asp-page-handler="Add">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-2">
+                                <textarea name="NewPostContent" class="form-control" rows="3"
+                                          placeholder="Написать пост..."></textarea>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-sm btn-primary">Добавить пост</button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <h5 class="card-title text-primary border-bottom pb-2 mb-3">
+                        Посты на стене (@Model.TotalPostCount)
+                    </h5>
+
+                    <!-- Форма добавления поста (только для своего профиля) -->
+                    @if (Model.IsOwnProfile)
+                    {
+                        <form method="post" asp-page-handler="Add" class="mb-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="skip" value="@Model.Skip" />
+                            <div class="mb-2">
+                                <textarea name="NewPostContent" class="form-control" rows="2"
+                                          placeholder="Написать пост..."
+                                          asp-for="NewPostContent"></textarea>
+                            </div>
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-sm btn-primary">Опубликовать</button>
+                            </div>
+                        </form>
+                    }
+
+                    @foreach (var post in Model.Posts)
+                    {
+                        <div class="post-item mb-3 pb-3 border-bottom">
+                            <p class="mb-1">@post.Content</p>
+                            <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+
+                            @if (Model.IsOwnProfile)
                             {
-                                var prevSkip = (Model.CurrentPage - 2) * Model.PostsPerPage;
-                                <li class="page-item">
-                                    <a class="page-link" href="?skip=@prevSkip">«</a>
-                                </li>
+                                <div class="mt-1">
+                                    <!-- Кнопка редактирования -->
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+                                            data-bs-toggle="modal" data-bs-target="#editModal"
+                                            data-post-id="@post.Id"
+                                            data-post-content="@post.Content.Replace("\"", "&quot;")">
+                                        ✏️
+                                    </button>
+                                    <!-- Кнопка удаления -->
+                                    <form method="post" asp-page-handler="DeletePost" class="d-inline"
+                                          onsubmit="return confirm('Удалить этот пост?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="postId" value="@post.Id" />
+                                        <input type="hidden" name="skip" value="@Model.Skip" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                                    </form>
+                                </div>
                             }
-                            else
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link">«</span>
-                                </li>
-                            }
+                        </div>
+                    }
 
-                            @* Генерация номеров страниц *@
-                            @{
-                                int startPage, endPage;
-                                if (Model.TotalPages <= 7)
+                    <!-- Пагинация -->
+                    @if (Model.TotalPages > 1)
+                    {
+                        <nav class="mt-3 pt-2">
+                            <ul class="pagination justify-content-center mb-0">
+                                <!-- Назад -->
+                                @if (Model.CurrentPage > 1)
                                 {
-                                    startPage = 1;
-                                    endPage = Model.TotalPages;
+                                    var prevSkip = (Model.CurrentPage - 2) * Model.PostsPerPage;
+                                    <li class="page-item">
+                                        <a class="page-link" href="?skip=@prevSkip">«</a>
+                                    </li>
                                 }
                                 else
                                 {
-                                    startPage = Model.CurrentPage <= 4 ? 1 : Model.CurrentPage - 2;
-                                    endPage = startPage + 6;
-                                    if (endPage > Model.TotalPages)
+                                    <li class="page-item disabled">
+                                        <span class="page-link">«</span>
+                                    </li>
+                                }
+
+                                @* Генерация номеров страниц *@
+                                @{
+                                    int startPage, endPage;
+                                    if (Model.TotalPages <= 7)
                                     {
+                                        startPage = 1;
                                         endPage = Model.TotalPages;
-                                        startPage = Math.Max(1, endPage - 6);
+                                    }
+                                    else
+                                    {
+                                        startPage = Model.CurrentPage <= 4 ? 1 : Model.CurrentPage - 2;
+                                        endPage = startPage + 6;
+                                        if (endPage > Model.TotalPages)
+                                        {
+                                            endPage = Model.TotalPages;
+                                            startPage = Math.Max(1, endPage - 6);
+                                        }
                                     }
                                 }
-                            }
 
-                            @for (int p = startPage; p <= endPage; p++)
-                            {
-                                var pageSkip = (p - 1) * Model.PostsPerPage;
-                                <li class="page-item @(p == Model.CurrentPage ? "active" : "")">
-                                    <a class="page-link" href="?skip=@pageSkip">@p</a>
-                                </li>
-                            }
+                                @for (int p = startPage; p <= endPage; p++)
+                                {
+                                    var pageSkip = (p - 1) * Model.PostsPerPage;
+                                    <li class="page-item @(p == Model.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="?skip=@pageSkip">@p</a>
+                                    </li>
+                                }
 
-                            <!-- Вперёд -->
-                            @if (Model.CurrentPage < Model.TotalPages)
-                            {
-                                var nextSkip = Model.CurrentPage * Model.PostsPerPage;
-                                <li class="page-item">
-                                    <a class="page-link" href="?skip=@nextSkip">»</a>
-                                </li>
-                            }
-                            else
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link">»</span>
-                                </li>
-                            }
-                        </ul>
-                    </nav>
-                }
+                                <!-- Вперёд -->
+                                @if (Model.CurrentPage < Model.TotalPages)
+                                {
+                                    var nextSkip = Model.CurrentPage * Model.PostsPerPage;
+                                    <li class="page-item">
+                                        <a class="page-link" href="?skip=@nextSkip">»</a>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">»</span>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                </div>
+            </div>
+        }
+    }
+
+    <!-- Модальное окно редактирования поста (только если есть посты) -->
+    @if (Model.TotalPostCount > 0)
+    {
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="post" asp-page-handler="Edit">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel">Редактировать пост</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="EditPostId" id="EditPostId" />
+                            <div class="mb-3">
+                                <textarea name="EditPostContent" id="EditPostContent" class="form-control" rows="4"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     }

@@ -32,6 +32,15 @@ public class ProfileModel(UserService userService, ObservingService observingSer
     [FromQuery]
     public int Skip { get; set; } = 0;
 
+    [BindProperty]
+    public string NewPostContent { get; set; } = "";
+
+    [BindProperty]
+    public int EditPostId { get; set; }
+
+    [BindProperty]
+    public string EditPostContent { get; set; } = "";
+
     public async Task<IActionResult> OnGetAsync()
     {
         var currentUserEmail = User?.FindFirst(ClaimTypes.Email)?.Value;
@@ -165,5 +174,74 @@ public class ProfileModel(UserService userService, ObservingService observingSer
         }
 
         return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
+    }
+
+    public async Task<IActionResult> OnPostAddAsync()
+    {
+        var currentUserEmail = User?.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(currentUserEmail))
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null)
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        try
+        {
+            await _postService.Add(currentUser.Id, NewPostContent);
+            TempData[Messages.SUCCESS] = "Пост добавлен";
+        }
+        catch (ArgumentException ex)
+        {
+            TempData[Messages.ERROR] = ex.Message;
+        }
+
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id, skip = Skip });
+    }
+
+    public async Task<IActionResult> OnPostEditAsync()
+    {
+        var currentUserEmail = User?.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(currentUserEmail))
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null)
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        try
+        {
+            await _postService.Update(EditPostId, currentUser.Id, EditPostContent);
+            TempData[Messages.SUCCESS] = "Пост обновлён";
+        }
+        catch (ArgumentException ex)
+        {
+            TempData[Messages.ERROR] = ex.Message;
+        }
+
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id, skip = Skip });
+    }
+
+    public async Task<IActionResult> OnPostDeletePostAsync(int postId)
+    {
+        var currentUserEmail = User?.FindFirst(ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(currentUserEmail))
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        var currentUser = await _userService.GetByEmail(currentUserEmail);
+        if (currentUser == null)
+            return RedirectToPage(Routes.Pages.Auth.Login);
+
+        try
+        {
+            await _postService.Delete(postId, currentUser.Id);
+            TempData[Messages.SUCCESS] = "Пост удалён";
+        }
+        catch (ArgumentException ex)
+        {
+            TempData[Messages.ERROR] = ex.Message;
+        }
+
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id, skip = Skip });
     }
 }

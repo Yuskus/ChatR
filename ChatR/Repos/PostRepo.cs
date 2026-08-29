@@ -24,4 +24,31 @@ public class PostRepo(ApplicationDbContext context)
             .Where(p => p.UserId == userId)
             .CountAsync();
     }
+
+    public async Task<Post?> GetById(int id)
+    {
+        return await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
+    }
+
+    public async Task<Post> Add(Post post)
+    {
+        await _context.Posts.AddAsync(post);
+        await _context.SaveChangesAsync();
+        return post;
+    }
+
+    public async Task Update(Post post)
+    {
+        _context.Posts.Update(post);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task Delete(int id)
+    {
+        var post = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
+        if (post == null) return;
+
+        _context.Posts.Remove(post);
+        await _context.SaveChangesAsync();
+    }
 }
