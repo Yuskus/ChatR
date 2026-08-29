@@ -90,4 +90,24 @@ public class PostService(PostRepo postRepo)
 
         await _postRepo.Delete(id);
     }
+
+    public async Task<List<Post>> GetFeedPosts(int userId, int skip, int take)
+    {
+        if (userId <= 0)
+            throw new ArgumentException("ID пользователя должен быть положительным", nameof(userId));
+        if (skip < 0)
+            throw new ArgumentException("Skip не может быть отрицательным", nameof(skip));
+        if (take <= 0)
+            throw new ArgumentException("Take должно быть положительным", nameof(take));
+
+        return await _postRepo.GetFeedPosts(userId, skip, take);
+    }
+
+    public async Task<int> GetFeedPostCount(int userId)
+    {
+        if (userId <= 0)
+            throw new ArgumentException("ID пользователя должен быть положительным", nameof(userId));
+
+        return await _postRepo.GetFeedPostCount(userId);
+    }
 }

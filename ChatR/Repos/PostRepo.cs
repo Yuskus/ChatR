@@ -51,4 +51,32 @@ public class PostRepo(ApplicationDbContext context)
         _context.Posts.Remove(post);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<Post>> GetFeedPosts(int userId, int skip, int take)
+    {
+        var followedUserIds = await _context.Observings
+            .Where(o => o.UserFromId == userId)
+            .Select(o => o.UserToId)
+            .ToListAsync();
+
+        return await _context.Posts
+            .Where(p => followedUserIds.Contains(p.UserId))
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .Include(p => p.User)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetFeedPostCount(int userId)
+    {
+        var followedIds = await _context.Observings
+            .Where(o => o.UserFromId == userId)
+            .Select(o => o.UserToId)
+            .ToListAsync();
+
+        return await _context.Posts
+            .Where(p => followedIds.Contains(p.UserId))
+            .CountAsync();
+    }
 }

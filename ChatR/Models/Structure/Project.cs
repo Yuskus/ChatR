@@ -32,5 +32,6 @@ public static class Routes
         public const string Error = "/Error";
         public const string Index = "/Index";
         public const string Info = "/Info";
+        public const string Feed = "/Feed";
     }
 }
