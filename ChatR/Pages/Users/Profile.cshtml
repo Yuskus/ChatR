@@ -102,6 +102,25 @@
             </div>
         }
     }
+
+    <!-- Посты на стене -->
+    @if (Model.Posts.Count > 0)
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h5 class="card-title text-primary border-bottom pb-2 mb-3">
+                    Посты на стене (@Model.Posts.Count)
+                </h5>
+                @foreach (var post in Model.Posts)
+                {
+                    <div class="post-item mb-3 pb-3 border-bottom">
+                        <p class="mb-1">@post.Content</p>
+                        <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 @section Scripts

@@ -110,6 +110,7 @@ builder.Services.AddScoped<RoomRepo>();
 builder.Services.AddScoped<MessageRepo>();
 builder.Services.AddScoped<UserInRoomRepo>();
 builder.Services.AddScoped<ObservingRepo>();
+builder.Services.AddScoped<PostRepo>();
 
 // services
 builder.Services.AddScoped<AuthService>();
@@ -118,6 +119,7 @@ builder.Services.AddScoped<RoomService>();
 builder.Services.AddScoped<UserInRoomService>();
 builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<ObservingService>();
+builder.Services.AddScoped<PostService>();
 
 // database
 builder.Services.AddDbContext<ApplicationDbContext>(options => options

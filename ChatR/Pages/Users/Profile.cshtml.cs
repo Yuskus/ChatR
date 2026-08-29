@@ -9,16 +9,18 @@ using AuthConst = ChatR.Models.Constatns.Auth;
 
 namespace ChatR.Pages.Users;
 
-public class ProfileModel(UserService userService, ObservingService observingService) : PageModel
+public class ProfileModel(UserService userService, ObservingService observingService, PostService postService) : PageModel
 {
     private readonly UserService _userService = userService;
     private readonly ObservingService _observingService = observingService;
+    private readonly PostService _postService = postService;
     public int CurrentUserId { get; set; }
     public User? UserToShow { get; set; }
     public bool IsOwnProfile { get; set; }
     public bool IsSubscribed { get; set; }
     public int UsersFromCount { get; set; } = 0;
     public int UsersToCount { get; set; } = 0;
+    public List<Post> Posts { get; set; } = [];
 
     [FromRoute]
     public int Id { get; set; }
@@ -38,6 +40,8 @@ public class ProfileModel(UserService userService, ObservingService observingSer
             return NotFound();
 
         UserToShow = userToShow;
+        
+        Posts = await _postService.GetLastByUserId(Id);
         
         CurrentUserId = currentUser.Id;
         ViewData["CurrentUserId"] = currentUser.Id;

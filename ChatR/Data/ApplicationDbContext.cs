@@ -11,6 +11,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserInRoom> UsersInRoom { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<Observing> Observings { get; set; }
+    public DbSet<Post> Posts { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -24,6 +25,7 @@ public class ApplicationDbContext : DbContext
         AddRooms(modelBuilder);
         AddUsersInRoom(modelBuilder);
         AddObservings(modelBuilder);
+        AddPosts(modelBuilder);
     }
 
     private static void AddMessages(ModelBuilder modelBuilder)
@@ -157,6 +159,28 @@ public class ApplicationDbContext : DbContext
                 .HasOne(p => p.UserTo)
                 .WithMany(p => p.ObservingsTo)
                 .HasForeignKey(p => p.UserToId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void AddPosts(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Post>(post =>
+        {
+            post.ToTable("post");
+            
+            post
+                .Property(p => p.CreatedAt)
+                .HasDefaultValueSql(Sql.NOW)
+                .IsRequired();
+            post
+                .Property(p => p.Content)
+                .IsRequired();
+
+            post
+                .HasOne(p => p.User)
+                .WithMany(p => p.Posts)
+                .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

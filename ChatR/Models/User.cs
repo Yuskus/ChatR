@@ -14,6 +14,7 @@ public record User
     public virtual List<UserInRoom> UsersInRoom { get; set; } = [];
     public virtual List<Observing> ObservingsFrom { get; set; } = [];
     public virtual List<Observing> ObservingsTo { get; set; } = [];
+    public virtual List<Post> Posts { get; set; } = [];
 }
 
 public enum UserRole
