@@ -20,6 +20,7 @@ public static class Routes
         {
             public const string Profile = "/Users/Profile";
             public const string EditProfile = "/Users/EditProfile";
+            public const string AllUsers = "/Users/AllUsers";
         }
 
         public static class Observings

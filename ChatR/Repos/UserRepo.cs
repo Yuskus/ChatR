@@ -14,6 +14,31 @@ public class UserRepo(ApplicationDbContext context)
             .CountAsync();
     }
 
+    public async Task<List<User>> GetAll()
+    {
+        return await _context.Users
+            .OrderByDescending(u => u.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<User>> GetAllWithSearch(string? search, int skip, int take)
+    {
+        IQueryable<User> query = _context.Users.OrderByDescending(u => u.CreatedAt);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var terms = search.Trim().ToLower().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+            query = query.Where(u =>
+                terms.All(t =>
+                    u.LastName.ToLower().Contains(t) ||
+                    u.FirstName.ToLower().Contains(t) ||
+                    (u.Patronymic != null && u.Patronymic.ToLower().Contains(t))));
+        }
+
+        return await query.Skip(skip).Take(take).ToListAsync();
+    }
+
     public async Task<User?> GetById(int id)
     {
         return await _context.Users

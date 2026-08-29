@@ -15,6 +15,16 @@ public class UserService(UserRepo userRepo)
         return await _userRepo.Count();
     }
 
+    public async Task<List<User>> GetAll()
+    {
+        return await _userRepo.GetAll();
+    }
+
+    public async Task<List<User>> GetAllWithSearch(string? search, int skip, int take)
+    {
+        return await _userRepo.GetAllWithSearch(search, skip, take);
+    }
+
     public async Task<User?> GetById(int id)
     {
         if (id <= 0)
