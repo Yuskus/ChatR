@@ -104,12 +104,13 @@
     }
 
     <!-- Посты на стене -->
+    <div id="posts-anchor" data-skip="@Model.Skip"></div>
     @if (Model.Posts.Count > 0)
     {
         <div class="card shadow-sm mt-4">
             <div class="card-body">
                 <h5 class="card-title text-primary border-bottom pb-2 mb-3">
-                    Посты на стене (@Model.Posts.Count)
+                    Посты на стене (@Model.TotalPostCount)
                 </h5>
                 @foreach (var post in Model.Posts)
                 {
@@ -117,6 +118,72 @@
                         <p class="mb-1">@post.Content</p>
                         <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
                     </div>
+                }
+
+                <!-- Пагинация -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="mt-3 pt-2">
+                        <ul class="pagination justify-content-center mb-0">
+                            <!-- Назад -->
+                            @if (Model.CurrentPage > 1)
+                            {
+                                var prevSkip = (Model.CurrentPage - 2) * Model.PostsPerPage;
+                                <li class="page-item">
+                                    <a class="page-link" href="?skip=@prevSkip">«</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">«</span>
+                                </li>
+                            }
+
+                            @* Генерация номеров страниц *@
+                            @{
+                                int startPage, endPage;
+                                if (Model.TotalPages <= 7)
+                                {
+                                    startPage = 1;
+                                    endPage = Model.TotalPages;
+                                }
+                                else
+                                {
+                                    startPage = Model.CurrentPage <= 4 ? 1 : Model.CurrentPage - 2;
+                                    endPage = startPage + 6;
+                                    if (endPage > Model.TotalPages)
+                                    {
+                                        endPage = Model.TotalPages;
+                                        startPage = Math.Max(1, endPage - 6);
+                                    }
+                                }
+                            }
+
+                            @for (int p = startPage; p <= endPage; p++)
+                            {
+                                var pageSkip = (p - 1) * Model.PostsPerPage;
+                                <li class="page-item @(p == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="?skip=@pageSkip">@p</a>
+                                </li>
+                            }
+
+                            <!-- Вперёд -->
+                            @if (Model.CurrentPage < Model.TotalPages)
+                            {
+                                var nextSkip = Model.CurrentPage * Model.PostsPerPage;
+                                <li class="page-item">
+                                    <a class="page-link" href="?skip=@nextSkip">»</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">»</span>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
                 }
             </div>
         </div>
@@ -126,4 +193,5 @@
 @section Scripts
 {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/posts/list.js"></script>
 }

@@ -17,4 +17,11 @@ public class PostRepo(ApplicationDbContext context)
             .Take(count)
             .ToListAsync();
     }
+
+    public async Task<int> GetCountByUserId(int userId)
+    {
+        return await _context.Posts
+            .Where(p => p.UserId == userId)
+            .CountAsync();
+    }
 }

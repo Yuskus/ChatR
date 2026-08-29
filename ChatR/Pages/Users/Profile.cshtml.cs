@@ -21,9 +21,16 @@ public class ProfileModel(UserService userService, ObservingService observingSer
     public int UsersFromCount { get; set; } = 0;
     public int UsersToCount { get; set; } = 0;
     public List<Post> Posts { get; set; } = [];
+    public int TotalPostCount { get; set; } = 0;
+    public int TotalPages { get; set; } = 1;
+    public int CurrentPage { get; set; } = 1;
+    public int PostsPerPage { get; set; } = 10;
 
     [FromRoute]
     public int Id { get; set; }
+
+    [FromQuery]
+    public int Skip { get; set; } = 0;
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -40,8 +47,17 @@ public class ProfileModel(UserService userService, ObservingService observingSer
             return NotFound();
 
         UserToShow = userToShow;
-        
-        Posts = await _postService.GetLastByUserId(Id);
+
+        TotalPostCount = await _postService.GetCountByUserId(Id);
+        PostsPerPage = 10;
+        TotalPages = TotalPostCount > 0
+            ? (int)Math.Ceiling((double)TotalPostCount / PostsPerPage)
+            : 1;
+        CurrentPage = Skip / PostsPerPage + 1;
+        if (CurrentPage < 1) CurrentPage = 1;
+        if (CurrentPage > TotalPages) CurrentPage = TotalPages;
+
+        Posts = await _postService.GetLastByUserId(Id, Skip, PostsPerPage);
         
         CurrentUserId = currentUser.Id;
         ViewData["CurrentUserId"] = currentUser.Id;

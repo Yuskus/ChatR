@@ -18,4 +18,12 @@ public class PostService(PostRepo postRepo)
 
         return await _postRepo.GetLastByUserId(userId, skip, count);
     }
+
+    public async Task<int> GetCountByUserId(int userId)
+    {
+        if (userId <= 0)
+            throw new ArgumentException("ID пользователя должен быть положительным", nameof(userId));
+
+        return await _postRepo.GetCountByUserId(userId);
+    }
 }
