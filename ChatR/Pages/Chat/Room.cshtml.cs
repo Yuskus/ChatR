@@ -17,13 +17,14 @@ public class RoomModel(
     private readonly UserService _userService = userService;
     private readonly RoomService _roomService = roomService;
     private readonly UserInRoomService _userInRoomService = userInRoomService;
-
+    
+    [FromRoute]
     public int RoomId { get; set; }
     public string RoomName { get; set; } = "";
     public int CurrentUserId { get; set; }
     public string CurrentUserEmail { get; set; } = "";
     public List<Message> Messages { get; set; } = [];
-    public List<User> RoomUsers { get; set; } = [];
+    public List<UserInRoom> RoomUsers { get; set; } = [];
 
     public async Task<IActionResult> OnGetAsync(int roomId)
     {
@@ -58,11 +59,7 @@ public class RoomModel(
         if (usersInRoom == null)
             return NotFound();
 
-        RoomUsers = usersInRoom
-            .Where(x => x.User != null)
-            .Select(x => x.User)
-            .Cast<User>()
-            .ToList();
+        RoomUsers = usersInRoom;
 
         return Page();
     }

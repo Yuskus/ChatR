@@ -27,7 +27,7 @@ public class ProfileModel(UserService userService, ObservingService observingSer
     public int PostsPerPage { get; set; } = 10;
 
     [FromRoute]
-    public int Id { get; set; }
+    public int UserId { get; set; }
 
     [FromQuery]
     public int Skip { get; set; } = 0;
@@ -51,13 +51,13 @@ public class ProfileModel(UserService userService, ObservingService observingSer
         if (currentUser == null)
             return RedirectToPage(Routes.Pages.Auth.Login);
 
-        var userToShow = await _userService.GetById(Id);
+        var userToShow = await _userService.GetById(UserId);
         if (userToShow == null)
             return NotFound();
 
         UserToShow = userToShow;
 
-        TotalPostCount = await _postService.GetCountByUserId(Id);
+        TotalPostCount = await _postService.GetCountByUserId(UserId);
         PostsPerPage = 10;
         TotalPages = TotalPostCount > 0
             ? (int)Math.Ceiling((double)TotalPostCount / PostsPerPage)
@@ -66,19 +66,19 @@ public class ProfileModel(UserService userService, ObservingService observingSer
         if (CurrentPage < 1) CurrentPage = 1;
         if (CurrentPage > TotalPages) CurrentPage = TotalPages;
 
-        Posts = await _postService.GetLastByUserId(Id, Skip, PostsPerPage);
+        Posts = await _postService.GetLastByUserId(UserId, Skip, PostsPerPage);
         
         CurrentUserId = currentUser.Id;
         ViewData["CurrentUserId"] = currentUser.Id;
         
-        IsOwnProfile = currentUser.Id == Id;
-        UsersFromCount = await _observingService.GetUsersFromCount(Id);
-        UsersToCount = await _observingService.GetUsersToCount(Id);
+        IsOwnProfile = currentUser.Id == UserId;
+        UsersFromCount = await _observingService.GetUsersFromCount(UserId);
+        UsersToCount = await _observingService.GetUsersToCount(UserId);
 
         // Проверяем, подписан ли текущий пользователь на этого пользователя
         if (!IsOwnProfile)
         {
-            var observing = await _observingService.GetByIdPair(currentUser.Id, Id);
+            var observing = await _observingService.GetByIdPair(currentUser.Id, UserId);
             IsSubscribed = observing != null;
         }
 
@@ -92,7 +92,7 @@ public class ProfileModel(UserService userService, ObservingService observingSer
             return RedirectToPage(Routes.Pages.Auth.Login);
 
         var currentUser = await _userService.GetByEmail(currentUserEmail);
-        if (currentUser == null || currentUser.Id != Id)
+        if (currentUser == null || currentUser.Id != UserId)
         {
             TempData[Messages.ERROR] = "Access denied";
             return Forbid();
@@ -112,7 +112,7 @@ public class ProfileModel(UserService userService, ObservingService observingSer
         catch (Exception)
         {
             TempData[Messages.ERROR] = "Не удалось удалить аккаунт";
-            return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
+            return RedirectToPage(Routes.Pages.Users.Profile, new { id = UserId });
         }
     }
 
@@ -128,13 +128,13 @@ public class ProfileModel(UserService userService, ObservingService observingSer
 
         try
         {
-            if (currentUser.Id == Id)
+            if (currentUser.Id == UserId)
             {
                 TempData[Messages.ERROR] = "Нельзя подписаться на самого себя";
-                return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
+                return RedirectToPage(Routes.Pages.Users.Profile, new { id = UserId });
             }
 
-            await _observingService.Add(currentUser.Id, Id);
+            await _observingService.Add(currentUser.Id, UserId);
             TempData[Messages.SUCCESS] = "Вы подписались на пользователя";
         }
         catch (ArgumentException ex)
@@ -142,7 +142,7 @@ public class ProfileModel(UserService userService, ObservingService observingSer
             TempData[Messages.ERROR] = ex.Message;
         }
 
-        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = UserId });
     }
 
     public async Task<IActionResult> OnPostUnsubscribeAsync()
@@ -157,7 +157,7 @@ public class ProfileModel(UserService userService, ObservingService observingSer
 
         try
         {
-            var observing = await _observingService.GetByIdPair(currentUser.Id, Id);
+            var observing = await _observingService.GetByIdPair(currentUser.Id, UserId);
             if (observing != null)
             {
                 await _observingService.Delete(observing.Id);
@@ -173,7 +173,7 @@ public class ProfileModel(UserService userService, ObservingService observingSer
             TempData[Messages.ERROR] = ex.Message;
         }
 
-        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id });
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = UserId });
     }
 
     public async Task<IActionResult> OnPostAddAsync()
@@ -196,7 +196,7 @@ public class ProfileModel(UserService userService, ObservingService observingSer
             TempData[Messages.ERROR] = ex.Message;
         }
 
-        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id, skip = Skip });
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = UserId, skip = Skip });
     }
 
     public async Task<IActionResult> OnPostEditAsync()
@@ -219,7 +219,7 @@ public class ProfileModel(UserService userService, ObservingService observingSer
             TempData[Messages.ERROR] = ex.Message;
         }
 
-        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id, skip = Skip });
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = UserId, skip = Skip });
     }
 
     public async Task<IActionResult> OnPostDeletePostAsync(int postId)
@@ -242,6 +242,6 @@ public class ProfileModel(UserService userService, ObservingService observingSer
             TempData[Messages.ERROR] = ex.Message;
         }
 
-        return RedirectToPage(Routes.Pages.Users.Profile, new { id = Id, skip = Skip });
+        return RedirectToPage(Routes.Pages.Users.Profile, new { id = UserId, skip = Skip });
     }
 }

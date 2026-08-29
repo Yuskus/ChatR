@@ -5,7 +5,6 @@ using ChatR.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace ChatR.Pages;
 
@@ -13,8 +12,8 @@ namespace ChatR.Pages;
 public class IndexModel(
     RoomService roomService,
     UserInRoomService userInRoomService,
-    UserService userService,
-    ObservingService observingService) : PageModel
+    ObservingService observingService,
+    UserService userService) : PageModel
 {
     private readonly RoomService _roomService = roomService;
     private readonly UserInRoomService _userInRoomService = userInRoomService;
@@ -23,13 +22,12 @@ public class IndexModel(
 
     public List<Room> UserRooms { get; set; } = [];
     public Dictionary<int, RoomRole> RoomRoles { get; set; } = [];
+    public List<User> Following { get; set; } = [];
     public string CurrentUserEmail { get; set; } = "";
     public int CurrentUserId { get; set; }
 
     [BindProperty]
     public string NewRoomName { get; set; } = "";
-
-    public List<User> FollowedUsers { get; set; } = [];
 
     [BindProperty]
     public int SelectedUserId { get; set; }
@@ -109,6 +107,25 @@ public class IndexModel(
         return await LoadRoomsAsync();
     }
 
+    public async Task<IActionResult> OnPostLeaveAsync(int roomId)
+    {
+        try
+        {
+            var email = User.Identity?.Name ?? User.FindFirst(ClaimTypes.Email)?.Value;
+            var user = await _userService.GetByEmail(email!);
+            if (user == null) return Unauthorized();
+
+            await _userInRoomService.Delete(user.Id, roomId);
+            TempData[Messages.SUCCESS] = "Вы покинули комнату.";
+        }
+        catch (Exception)
+        {
+            TempData[Messages.ERROR] = "Не удалось покинуть комнату";
+        }
+
+        return await LoadRoomsAsync();
+    }
+
     public async Task<IActionResult> OnPostAddMemberAsync(int roomId)
     {
         if (SelectedUserId <= 0)
@@ -172,16 +189,7 @@ public class IndexModel(
 
             ViewData["CurrentUserId"] = user.Id;
 
-            var observingList = await _observingService.GetUsersFromById(user.Id);
-            FollowedUsers = [];
-            foreach (var obs in observingList)
-            {
-                var followedUser = await _userService.GetById(obs.UserToId);
-                if (followedUser != null)
-                {
-                    FollowedUsers.Add(followedUser);
-                }
-            }
+            Following = await _observingService.GetMutualObservings(user.Id);
 
             var memberships = await _userInRoomService.GetByUserId(user.Id);
             List<Room> rooms = [];
@@ -197,10 +205,6 @@ public class IndexModel(
             }
 
             UserRooms = rooms;
-
-            ViewData["FollowedUsersJson"] = JsonSerializer.Serialize(
-                FollowedUsers.Select(u => new { u.Id, Name = u.LastName + " " + u.FirstName + " " + (u.Patronymic ?? "") }),
-                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
         catch (Exception ex)
         {

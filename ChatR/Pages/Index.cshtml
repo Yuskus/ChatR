@@ -1,6 +1,7 @@
 ﻿@page
 @using ChatR.Models
 @using ChatR.Models.Constatns
+@using ChatR.Models.Structure
 @model ChatR.Pages.IndexModel
 @{
     ViewData["Title"] = "Ваши комнаты";
@@ -47,7 +48,7 @@
                 var isAdmin = Model.RoomRoles.TryGetValue(room.Id, out var role) && role == RoomRole.Admin;
                 var itemClass = isAdmin ? "list-group-item list-group-item-warning" : "list-group-item";
                 <div class="@itemClass d-flex justify-content-between align-items-center">
-                    <div>
+                    <a href="@Routes.Pages.Chat.Room/@room.Id" class="text-decoration-none text-dark">
                         <strong>@room.Name</strong>
                         @if (isAdmin)
                         {
@@ -56,15 +57,32 @@
                         <small class="text-muted d-block">
                             Создана: @room.CreatedAt.ToString("dd.MM.yyyy")
                         </small>
-                    </div>
+                    </a>
                     <div>
-                        <form method="post" asp-page-handler="Join" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="roomId" value="@room.Id" />
-                            <button type="submit"
-                                    data-id="@room.Id"
-                                    class="btn btn-sm btn-outline-primary join-btn">Войти</button>
-                        </form>
+                        @if (isAdmin)
+                        {
+                            <form method="post" asp-page-handler="Delete" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="roomId" value="@room.Id" />
+                                <button type="submit"
+                                        data-id="@room.Id"
+                                        class="btn btn-sm btn-outline-danger delete-btn">
+                                    Удалить
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form method="post" asp-page-handler="Leave" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="roomId" value="@room.Id" />
+                                <button type="submit"
+                                        data-id="@room.Id"
+                                        class="btn btn-sm btn-outline-warning leave-btn">
+                                    Покинуть
+                                </button>
+                            </form>
+                        }
 
                         <!-- Кнопка вызова модалки -->
                         <button type="button"
@@ -74,16 +92,6 @@
                                 data-room-id="@room.Id">
                             Добавить участника
                         </button>
-
-                        <form method="post" asp-page-handler="Delete" class="d-inline ms-2">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="roomId" value="@room.Id" />
-                            <button type="submit"
-                                    data-id="@room.Id"
-                                    class="btn btn-sm btn-outline-danger delete-btn">
-                                Удалить
-                            </button>
-                        </form>
                     </div>
                 </div>
             }
@@ -109,18 +117,13 @@
                     <input type="hidden" name="roomId" id="modalRoomId" />
 
                     <div class="mb-3">
-                        <label for="memberSearch" class="form-label">Поиск по ФИО</label>
-                        <input type="text"
-                               class="form-control"
-                               id="memberSearch"
-                               placeholder="Начните вводить фамилию или имя..."
-                               data-users='@Html.Raw(ViewData["FollowedUsersJson"])' />
-                    </div>
-
-                    <div class="mb-3">
                         <label for="memberSelect" class="form-label">Выберите пользователя</label>
                         <select class="form-select" id="memberSelect" name="SelectedUserId">
-                            <option value="">-- Начните поиск ниже --</option>
+                            <option value="">-- Выберите пользователя --</option>
+                            @foreach (var user in Model.Following)
+                            {
+                                <option value="@user.Id">@user.LastName @user.FirstName @user.Patronymic</option>
+                            }
                         </select>
                     </div>
                 </div>

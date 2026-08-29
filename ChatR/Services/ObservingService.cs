@@ -121,7 +121,7 @@ public class ObservingService(
         return await _observingRepo.GetByIdPair(userFromId, userToId);
     }
 
-    public async Task<IEnumerable<User>> GetMutualObservings(int userId)
+    public async Task<List<User>> GetMutualObservings(int userId)
     {
         if (userId <= 0)
             throw new ArgumentException(Errors.ID_MUST_BE_POSITIVE, nameof(userId));

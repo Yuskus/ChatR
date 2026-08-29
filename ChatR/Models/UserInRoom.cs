@@ -10,6 +10,14 @@ public record UserInRoom
     public virtual User? User { get; set; }
     public required int RoomId { get; set; }
     public virtual Room? Room { get; set; }
+
+    public string RoomRoleString => RoomRole switch
+    {
+        RoomRole.Member => "Участник",
+        RoomRole.Editor => "Редактор",
+        RoomRole.Admin => "Админ",
+        _ => throw new ArgumentOutOfRangeException()
+    };
 }
 
 public enum RoomRole

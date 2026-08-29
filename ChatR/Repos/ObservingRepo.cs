@@ -66,7 +66,7 @@ public class ObservingRepo(ApplicationDbContext context)
             .FirstOrDefaultAsync(x => x.UserFromId == userFromId && x.UserToId == userToId);
     }
 
-    public async Task<IEnumerable<User>> GetMutualObservings(int userId)
+    public async Task<List<User>> GetMutualObservings(int userId)
     {
         var mutualUserIds = _context.Observings
             .Where(x => x.UserToId == userId || x.UserFromId == userId)
